@@ -8,6 +8,8 @@ _ROOT = os.path.abspath(
 ROOT_PATH = _ROOT + os.sep
 
 def _load_users():
+    print("USER FILE:", ROOT_PATH + "user.json")
+
     with open(ROOT_PATH + "user.json", "r") as f:
         return json.load(f)
 
