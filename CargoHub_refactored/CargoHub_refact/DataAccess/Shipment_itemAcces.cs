@@ -2,7 +2,8 @@ namespace Project.DataAccess;
 
 public static class Shipment_itemAcces
 {
-    private static readonly string _dbPath = Path.Combine(AppContext.BaseDirectory, "DataSources", "cargohub.db");
+    private static readonly string _dbPath = Path.GetFullPath(
+        Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "DataSources", "cargohub.db"));
     private static SqliteConnection _connection = new SqliteConnection($"Data Source=\"{_dbPath}\";");
     private static string _Table = "Shipment_item";
 

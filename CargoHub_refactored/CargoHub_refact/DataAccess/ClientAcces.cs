@@ -2,7 +2,8 @@ namespace Project.DataAccess;
 
 public static class ClientAcces
 {
-    private static readonly string _dbPath = Path.Combine(AppContext.BaseDirectory, "DataSources", "cargohub.db");
+    private static readonly string _dbPath = Path.GetFullPath(
+        Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "DataSources", "cargohub.db"));
     private const string _Table = "Client";
 
     public static void CreateTable(string? path = null)
