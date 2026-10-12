@@ -6,13 +6,13 @@ public class ItemModel
 
     public string Description { get; set; }
 
-    public int Barcode { get; set; }
+    public string Barcode { get; set; }
 
     public string Model_Number { get; set; }
 
     public int Commodity_Code { get; set; }
 
-    public float Unit_Weight { get; set; }
+    public decimal Unit_Weight { get; set; }
 
     public Int64 Item_Line_ID { get; set; }
 
@@ -44,10 +44,10 @@ public class ItemModel
         Int64 id,
         string code,
         string description,
-        int barcode,
+        string barcode,
         string model_Number,
         int commodity_Code,
-        float unit_Weight,
+        decimal unit_Weight,
         Int64 item_Line_ID,
         Int64 item_Group_ID,
         Int64 item_Type_ID,
