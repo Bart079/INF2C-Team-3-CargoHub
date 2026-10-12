@@ -2,13 +2,13 @@ public class ItemModel
 {
     public Int64 ID { get; set; }
 
-    public string Code { get; set; }
+    public string Code { get; set; } = "";
 
-    public string Description { get; set; }
+    public string Description { get; set; } = "";
 
-    public string Barcode { get; set; }
+    public string Barcode { get; set; } = "";
 
-    public string Model_Number { get; set; }
+    public string Model_Number { get; set; } = "";
 
     public int Commodity_Code { get; set; }
 
@@ -24,13 +24,13 @@ public class ItemModel
 
     public int Case_Size { get; set; }
 
-    public string Packaging_Type { get; set; }
+    public string Packaging_Type { get; set; } = "";
 
     public int Order_Multiple { get; set; }
 
     public Int64 Supplier_ID { get; set; }
 
-    public string Supplier_SKU { get; set; }
+    public string Supplier_SKU { get; set; } = "";
 
     public DateTime Created_At { get; set; }
 
