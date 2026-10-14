@@ -2,17 +2,17 @@ public class ItemModel
 {
     public Int64 ID { get; set; }
 
-    public string Code { get; set; }
+    public string Code { get; set; } = "";
 
-    public string Description { get; set; }
+    public string Description { get; set; } = "";
 
-    public int Barcode { get; set; }
+    public string Barcode { get; set; } = "";
 
-    public string Model_Number { get; set; }
+    public string Model_Number { get; set; } = "";
 
     public int Commodity_Code { get; set; }
 
-    public float Unit_Weight { get; set; }
+    public decimal Unit_Weight { get; set; }
 
     public Int64 Item_Line_ID { get; set; }
 
@@ -20,17 +20,17 @@ public class ItemModel
 
     public Int64 Item_Type_ID { get; set; }
 
-    public int Min_Purchase_qty { get; set; }
+    public int Min_Purchase_Quantity { get; set; }
 
     public int Case_Size { get; set; }
 
-    public string Packaging_Type { get; set; }
+    public string Packaging_Type { get; set; } = "";
 
     public int Order_Multiple { get; set; }
 
     public Int64 Supplier_ID { get; set; }
 
-    public string Supplier_SKU { get; set; }
+    public string Supplier_SKU { get; set; } = "";
 
     public DateTime Created_At { get; set; }
 
@@ -44,14 +44,14 @@ public class ItemModel
         Int64 id,
         string code,
         string description,
-        int barcode,
+        string barcode,
         string model_Number,
         int commodity_Code,
-        float unit_Weight,
+        decimal unit_Weight,
         Int64 item_Line_ID,
         Int64 item_Group_ID,
         Int64 item_Type_ID,
-        int min_Purchase_qty,
+        int min_purchase_quantity,
         int case_Size,
         string packaging_Type,
         int order_Multiple,
@@ -70,7 +70,7 @@ public class ItemModel
         Item_Line_ID = item_Line_ID;
         Item_Group_ID = item_Group_ID;
         Item_Type_ID = item_Type_ID;
-        Min_Purchase_qty = min_Purchase_qty;
+        Min_Purchase_Quantity = min_purchase_quantity;
         Case_Size = case_Size;
         Packaging_Type = packaging_Type;
         Order_Multiple = order_Multiple;
