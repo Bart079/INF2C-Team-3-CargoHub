@@ -2,9 +2,6 @@ namespace Project.DataAccess;
 
 public static class Transfer_itemAcces
 {
-    private static readonly string _dbPath = Path.GetFullPath(
-        Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "DataSources", "cargohub.db"));
-    private static SqliteConnection _connection = new SqliteConnection($"Data Source=\"{_dbPath}\";");
     private static string _Table = "Transfer_item";
 
     public static void CreateTable(string path)
@@ -17,7 +14,7 @@ public static class Transfer_itemAcces
                 amount decimal(10,2) NOT NULL
             );";
 
-        using (var connection = new SqliteConnection($"Data Source=\"{path}\";"))
+        using (var connection = DatabaseConnection.CreateConnection(path))
         {
             connection.Open();
             connection.Execute(sql);
@@ -27,7 +24,7 @@ public static class Transfer_itemAcces
     public static void DropTable(string path)
     {
         string sql = $"DROP TABLE IF EXISTS {_Table}";
-        using (var connection = new SqliteConnection($"Data Source=\"{path}\";"))
+        using (var connection = DatabaseConnection.CreateConnection(path))
         {
             connection.Open();
             connection.Execute(sql);

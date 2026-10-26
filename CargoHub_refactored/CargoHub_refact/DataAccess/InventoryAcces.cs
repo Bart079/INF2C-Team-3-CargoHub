@@ -2,9 +2,6 @@ namespace Project.DataAccess;
 
 public static class InventoryAcces
 {
-    private static readonly string _dbPath = Path.GetFullPath(
-        Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "DataSources", "cargohub.db"));
-    private static SqliteConnection _connection = new SqliteConnection($"Data Source=\"{_dbPath}\";");
     private static string _Table = "Inventory";
 
     public static void CreateTable(string path)
@@ -22,7 +19,7 @@ public static class InventoryAcces
                 updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
             );";
 
-        using (var connection = new SqliteConnection($"Data Source=\"{path}\";"))
+        using (var connection = DatabaseConnection.CreateConnection(path))
         {
             connection.Open();
             connection.Execute(sql);
@@ -32,7 +29,7 @@ public static class InventoryAcces
     public static void DropTable(string path)
     {
         string sql = $"DROP TABLE IF EXISTS {_Table}";
-        using (var connection = new SqliteConnection($"Data Source=\"{path}\";"))
+        using (var connection = DatabaseConnection.CreateConnection(path))
         {
             connection.Open();
             connection.Execute(sql);
