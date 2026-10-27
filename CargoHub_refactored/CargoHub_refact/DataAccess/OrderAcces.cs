@@ -18,7 +18,7 @@ public static class OrderAcces
                 reference TEXT NOT NULL,
                 customer_po_number TEXT NOT NULL,
                 order_status TEXT NOT NULL,
-                shipping_notes TEXT NOT NULL,
+                shipping_notes TEXT ,
                 warehouse_id INTEGER NOT NULL REFERENCES Warehouse(warehouse_id),
                 ship_to_client_id INTEGER NOT NULL REFERENCES Client(client_id),
                 bill_to_client_id INTEGER NOT NULL REFERENCES Client(client_id),

@@ -12,7 +12,7 @@ public static class UserAcces
         string sql = $@"
             CREATE TABLE IF NOT EXISTS {_Table} (
                 user_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                api_key TEXT NOT NULL,
+                api_key TEXT NOT NULL UNIQUE,
                 app_name TEXT NOT NULL
             );";
 

@@ -1,0 +1,8 @@
+=== CargoHub migratierapport ===
+Datum: 2026-10-27 11:33:21
+
+Totaal aantal records: 80471
+Verwerkt: 80471
+Mislukt: 0
+Succespercentage: 100,00%
+Uitvoeringstijd: 00:00:03.6551738
