@@ -7,7 +7,7 @@ public class OrderModel
     public string Reference { get; set; } = "";
     public string Customer_PO_Number { get; set; } = "";
     public string Order_Status { get; set; } = "";
-    public string? Shipping_Notes { get; set; }
+    public string Shipping_Notes { get; set; } = "";
     public int Warehouse_ID { get; set; }
     public int Ship_To_Client_ID { get; set; }
     public int Bill_To_Client_ID { get; set; }
@@ -24,7 +24,7 @@ public class OrderModel
         string reference,
         string customer_PO_Number,
         string order_Status,
-        string? shipping_Notes,
+        string shipping_Notes,
         int warehouse_ID,
         int ship_To_Client_ID,
         int bill_To_Client_ID,

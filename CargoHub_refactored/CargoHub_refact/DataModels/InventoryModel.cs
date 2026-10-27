@@ -1,5 +1,6 @@
 public class InventoryModel
 {
+    public int ID { get; set; }
     public int Item_ID { get; set; }
     public int Location_ID { get; set; }
     public int Quantity_On_Hand { get; set; }
@@ -12,6 +13,7 @@ public class InventoryModel
     public InventoryModel() { }
 
     public InventoryModel(
+        int id,
         int item_ID,
         int location_ID,
         int quantity_On_Hand,
@@ -21,6 +23,7 @@ public class InventoryModel
         DateTime created_At,
         DateTime updated_At)
     {
+        ID = id;
         Item_ID = item_ID;
         Location_ID = location_ID;
         Quantity_On_Hand = quantity_On_Hand;

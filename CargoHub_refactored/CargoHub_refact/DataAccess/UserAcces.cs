@@ -2,9 +2,6 @@ namespace Project.DataAccess;
 
 public static class UserAcces
 {
-    private static readonly string _dbPath = Path.GetFullPath(
-        Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "DataSources", "cargohub.db"));
-
     private const string _Table = "User";
 
     public static void CreateTable(string? path = null)
@@ -16,7 +13,7 @@ public static class UserAcces
                 app_name TEXT NOT NULL
             );";
 
-        using (var connection = CreateConnection(path))
+        using (var connection = DatabaseConnection.CreateConnection(path))
         {
             connection.Open();
             connection.Execute(sql);
@@ -26,7 +23,7 @@ public static class UserAcces
     public static void DropTable(string? path = null)
     {
         string sql = $"DROP TABLE IF EXISTS {_Table}";
-        using (var connection = CreateConnection(path))
+        using (var connection = DatabaseConnection.CreateConnection(path))
         {
             connection.Open();
             connection.Execute(sql);
@@ -38,15 +35,5 @@ public static class UserAcces
     {
         DropTable(path);
         CreateTable(path);
-    }
-
-    private static SqliteConnection CreateConnection(string? path)
-    {
-        var connectionString = new SqliteConnectionStringBuilder
-        {
-            DataSource = path ?? _dbPath
-        }.ToString();
-
-        return new SqliteConnection(connectionString);
     }
 }
