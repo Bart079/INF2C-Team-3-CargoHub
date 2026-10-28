@@ -1,47 +1,119 @@
+using Project.DataAccess;
+
 public class ShipmentService : IShipmentService
 {
-    public Task<IEnumerable<ShipmentModel>> GetAllAsync()
+    private void ValidateShipment(ShipmentModel model)
     {
-        throw new NotImplementedException();
+        if (model == null)
+            throw new ArgumentNullException(nameof(model));
+//maybe validatie opsplitsen aanmaken en aanpassen (als database ids geeft)
+        if (model.ID <= 0)
+            throw new ArgumentException("ID must be greater than 0.", nameof(model.ID));
+
+        if (string.IsNullOrWhiteSpace(model.Reference))
+            throw new ArgumentException("Reference cannot be empty.", nameof(model.Reference));
+
+        if (model.Order_ID <= 0)
+            throw new ArgumentException("Order ID must be greater than 0.", nameof(model.Order_ID));
+
+        if (string.IsNullOrWhiteSpace(model.Shipment_Type))
+            throw new ArgumentException("Shipment type cannot be empty.", nameof(model.Shipment_Type));
+
+        if (string.IsNullOrWhiteSpace(model.Shipment_Status))
+            throw new ArgumentException("Shipment status cannot be empty.", nameof(model.Shipment_Status));
+
+        if (string.IsNullOrWhiteSpace(model.Carrier_Name))
+            throw new ArgumentException("Carrier name cannot be empty.", nameof(model.Carrier_Name));
+
+        if (string.IsNullOrWhiteSpace(model.Shipping_Method))
+            throw new ArgumentException("Shipping method cannot be empty.", nameof(model.Shipping_Method));
+
+        if (string.IsNullOrWhiteSpace(model.Payment_Type))
+            throw new ArgumentException("Payment type cannot be empty.", nameof(model.Payment_Type));
     }
 
-    public Task<ShipmentModel?> GetByIdAsync(int id)
+    public async Task<IEnumerable<ShipmentModel>> GetAllAsync()
     {
-        throw new NotImplementedException();
+        return await ShipmentAcces.GetAllAsync();
     }
 
-    public Task<ShipmentModel> CreateAsync(ShipmentModel model)
+    public async Task<ShipmentModel?> GetByIdAsync(int id)
     {
-        throw new NotImplementedException();
+        if (id <= 0)
+            return null;
+
+        return await ShipmentAcces.GetByIdAsync(id);
     }
 
-    public Task<bool> UpdateAsync(int id, ShipmentModel model)
+    public async Task<ShipmentModel> CreateAsync(ShipmentModel model)
     {
-        throw new NotImplementedException();
+        ValidateShipment(model);
+
+        return await ShipmentAcces.CreateAsync(model);
     }
 
-    public Task<bool> DeleteAsync(int id)
+    public async Task<bool> UpdateAsync(int id, ShipmentModel model)
     {
-        throw new NotImplementedException();
+        if (id <= 0)
+            return false;
+
+        ValidateShipment(model);
+
+        if (id != model.ID)
+            throw new ArgumentException("The ID must match the model ID.", nameof(id));
+
+        return await ShipmentAcces.UpdateAsync(id, model);
     }
 
-    public Task<IEnumerable<OrderModel>> GetOrdersAsync(int id)
+    public async Task<bool> DeleteAsync(int id)
     {
-        throw new NotImplementedException();
+        if (id <= 0)
+            return false;
+
+        return await ShipmentAcces.DeleteAsync(id);
     }
 
-    public Task<IEnumerable<ShipmentItemModel>> GetItemsAsync(int id)
+    // Haalt de order-ID's van een shipment op
+    public async Task<IEnumerable<int>> GetOrdersAsync(int id)
     {
-        throw new NotImplementedException();
+        if (id <= 0)
+            return Enumerable.Empty<int>();
+
+        return await ShipmentAcces.GetOrdersAsync(id);
     }
 
-    public Task<bool> UpdateOrdersAsync(int id, IEnumerable<int> orderIds)
+    // Haalt de items van een shipment op
+    public async Task<IEnumerable<ShipmentItemModel>> GetItemsAsync(int id)
     {
-        throw new NotImplementedException();
+        if (id <= 0)
+            return Enumerable.Empty<ShipmentItemModel>();
+
+        return await ShipmentAcces.GetItemsAsync(id);
     }
 
-    public Task<bool> UpdateItemsAsync(int id, IEnumerable<ShipmentItemModel> items)
+    public async Task<bool> UpdateOrdersAsync(int id, IEnumerable<int> orderIds)
     {
-        throw new NotImplementedException();
+        if (id <= 0)
+            return false;
+
+        if (orderIds == null)
+            throw new ArgumentNullException(nameof(orderIds));
+
+        if (orderIds.Any(orderId => orderId <= 0))
+            throw new ArgumentException("Order IDs must be greater than 0.", nameof(orderIds));
+
+        return await ShipmentAcces.UpdateOrdersAsync(id, orderIds);
+    }
+
+    public async Task<bool> UpdateItemsAsync(int id,IEnumerable<ShipmentItemModel> items)
+    {
+        if (id <= 0)
+            return false;
+
+        if (items == null)
+            throw new ArgumentNullException(nameof(items));
+
+        return await ShipmentAcces.UpdateItemsAsync(id, items);
     }
 }
+
