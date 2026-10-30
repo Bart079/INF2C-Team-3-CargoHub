@@ -1,32 +1,86 @@
+using Project.DataAccess;
+using System.ComponentModel.DataAnnotations;
+using System.Text.RegularExpressions;
 public class ClientService : IClientService
 {
-    public Task<IEnumerable<ClientModel>> GetAllAsync()
+private void ValidateClient(ClientModel model)
+{
+        ArgumentNullException.ThrowIfNull(model);
+
+        ArgumentException.ThrowIfNullOrWhiteSpace(model.Name);
+        ArgumentException.ThrowIfNullOrWhiteSpace(model.Address);
+        ArgumentException.ThrowIfNullOrWhiteSpace(model.City);
+        ArgumentException.ThrowIfNullOrWhiteSpace(model.Zip_Code);
+        ArgumentException.ThrowIfNullOrWhiteSpace(model.Province);
+        ArgumentException.ThrowIfNullOrWhiteSpace(model.Country);
+        ArgumentException.ThrowIfNullOrWhiteSpace(model.Contact_Name);
+        ArgumentException.ThrowIfNullOrWhiteSpace(model.Contact_Email);
+
+        if (!new EmailAddressAttribute().IsValid(model.Contact_Email))
+            throw new ArgumentException("Email address is invalid");
+
+        ArgumentException.ThrowIfNullOrWhiteSpace(model.Contact_Phone);
+
+        if (!Regex.IsMatch(model.Contact_Phone, @"^\+?[0-9 ]+$"))
+            throw new ArgumentException("Phone number is invalid.");
+
+        var digits = Regex.Replace(model.Contact_Phone, @"\D", "");
+        if (digits.Length < 8)
+            throw new ArgumentException("Phone number is too short.");
+
+        if (!Regex.IsMatch(model.Zip_Code, @"^[1-9][0-9]{3}\s?[A-Za-z]{2}$"))
+        {
+            throw new ArgumentException("Invalid zip code.", nameof(model.Zip_Code));
+        }
+}
+
+    public async Task<IEnumerable<ClientModel>> GetAllAsync()
     {
-        throw new NotImplementedException();
+        return await ClientAcces.GetAllAsync();
     }
 
-    public Task<ClientModel?> GetByIdAsync(int id)
+    public async Task<ClientModel?> GetByIdAsync(int id)
     {
-        throw new NotImplementedException();
+        if (id < 0)
+        return null;
+
+        return await ClientAcces.GetByIdAsync(id);
     }
 
-    public Task<ClientModel> CreateAsync(ClientModel model)
+    public async Task<ClientModel> CreateAsync(ClientModel model)
     {
-        throw new NotImplementedException();
+        ValidateClient(model);
+
+        return await ClientAcces.CreateAsync(model);
     }
 
-    public Task<bool> UpdateAsync(int id, ClientModel model)
+    public async Task<bool> UpdateAsync(int id, ClientModel model)
     {
-        throw new NotImplementedException();
+        if (id < 0)
+        return false;
+
+        if (id != model.ID)
+            throw new ArgumentException("The ID must match the model ID.", nameof(id));
+
+        ValidateClient(model);
+
+        return await ClientAcces.UpdateAsync(id,model);
     }
 
-    public Task<bool> DeleteAsync(int id)
+    public async Task<bool> DeleteAsync(int id)
     {
-        throw new NotImplementedException();
+        if (id < 0)
+            return false;
+
+        return await ClientAcces.DeleteAsync(id);
     }
 
-    public Task<IEnumerable<OrderModel>> GetOrdersAsync(int id)
+//checkt niet of ID ongeldig is of dat er geen orders zijn
+    public async Task<IEnumerable<OrderModel>> GetOrdersAsync(int id)
     {
-        throw new NotImplementedException();
+        if (id < 0)
+        return Enumerable.Empty<OrderModel>(); //geeft een lege lijst
+
+        return await ClientAcces.GetOrdersAsync(id);
     }
 }

@@ -1,32 +1,63 @@
+using Project.DataAccess;
+
 public class ItemTypeService : IItemTypeService
 {
-    public Task<IEnumerable<ItemTypeModel>> GetAllAsync()
+    private void ValidateItemType(ItemTypeModel model)
     {
-        throw new NotImplementedException();
+        ArgumentNullException.ThrowIfNull(model);
+        ArgumentException.ThrowIfNullOrWhiteSpace(model.Name);
+        ArgumentException.ThrowIfNullOrWhiteSpace(model.Description);
+
+        // Controleer of de naam een bestaande ItemType is
+        if (Item_typeAcces.ValidateByName(model.Name))
+            throw new ArgumentException("Invalid type name.", nameof(model.Name));
+    }
+    public async Task<IEnumerable<ItemTypeModel>> GetAllAsync()
+    {
+        return await Item_typeAcces.GetAllAsync();
     }
 
-    public Task<ItemTypeModel?> GetByIdAsync(int id)
+    public async Task<ItemTypeModel?> GetByIdAsync(int id)
     {
-        throw new NotImplementedException();
+        if (id < 0)
+        return null;
+
+        return await Item_typeAcces.GetByIdAsync(id);
     }
 
-    public Task<ItemTypeModel> CreateAsync(ItemTypeModel model)
+    public async Task<ItemTypeModel> CreateAsync(ItemTypeModel model)
     {
-        throw new NotImplementedException();
+        ValidateItemType(model);
+
+        return await Item_typeAcces.CreateAsync(model);
     }
 
-    public Task<bool> UpdateAsync(int id, ItemTypeModel model)
+    public async Task<bool> UpdateAsync(int id, ItemTypeModel model)
     {
-        throw new NotImplementedException();
+        if (id < 0)
+        return false;
+
+        ValidateItemType(model);
+        
+        if (id != model.ID)
+            throw new ArgumentException("The ID must match the model ID.", nameof(id));
+
+        return await Item_typeAcces.UpdateAsync(id,model);
     }
 
-    public Task<bool> DeleteAsync(int id)
+    public async Task<bool> DeleteAsync(int id)
     {
-        throw new NotImplementedException();
+        if (id < 0)
+        return false; 
+
+        return await Item_typeAcces.DeleteAsync(id);
     }
 
-    public Task<IEnumerable<ItemModel>> GetItemsAsync(int id)
+    public async Task<IEnumerable<ItemModel>> GetItemsAsync(int id)
     {
-        throw new NotImplementedException();
+        if (id < 0)
+        return Enumerable.Empty<ItemModel>(); //geeft een lege lijst
+
+        return await Item_typeAcces.GetItemsAsync(id);
     }
 }

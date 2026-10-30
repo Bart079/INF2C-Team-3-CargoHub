@@ -1,32 +1,61 @@
+using Project.DataAccess;
+
 public class ItemLineService : IItemLineService
 {
-    public Task<IEnumerable<ItemLineModel>> GetAllAsync()
+    private void ValidateItemLine(ItemLineModel model)
     {
-        throw new NotImplementedException();
+        ArgumentNullException.ThrowIfNull(model);
+        ArgumentException.ThrowIfNullOrWhiteSpace(model.Name);
+        ArgumentException.ThrowIfNullOrWhiteSpace(model.Description);
+
+        if (Item_lineAcces.ValidateByName(model.Name))
+        throw new ArgumentException("Invalid item line name.", nameof(model.Name));
+    }
+    public async Task<IEnumerable<ItemLineModel>> GetAllAsync()
+    {
+        return await Item_lineAcces.GetAllAsync();
+    }
+    public async Task<ItemLineModel?> GetByIdAsync(int id)
+    {
+        if (id < 0)
+        return null;
+
+        return await Item_lineAcces.GetByIdAsync(id);
     }
 
-    public Task<ItemLineModel?> GetByIdAsync(int id)
+    public async Task<ItemLineModel> CreateAsync(ItemLineModel model)
     {
-        throw new NotImplementedException();
+        ValidateItemLine(model);
+        return await Item_lineAcces.CreateAsync(model);
     }
 
-    public Task<ItemLineModel> CreateAsync(ItemLineModel model)
+    public async Task<bool> UpdateAsync(int id, ItemLineModel model)
     {
-        throw new NotImplementedException();
+        if (id < 0)
+        return false;
+        
+        ValidateItemLine(model);
+
+        if (id != model.ID)
+            throw new ArgumentException("The ID must match the model ID.", nameof(id));
+
+        return await Item_lineAcces.UpdateAsync(id,model);
     }
 
-    public Task<bool> UpdateAsync(int id, ItemLineModel model)
+    public async Task<bool> DeleteAsync(int id)
     {
-        throw new NotImplementedException();
+        if (id < 0)
+        return false;
+
+        return await Item_lineAcces.DeleteAsync(id);
     }
 
-    public Task<bool> DeleteAsync(int id)
+//checkt niet of ID ongeldig is of dat er geen orders zijn
+    public async Task<IEnumerable<ItemModel>> GetItemsAsync(int id)
     {
-        throw new NotImplementedException();
-    }
+        if (id < 0)
+        return Enumerable.Empty<ItemModel>(); //geeft een lege lijst
 
-    public Task<IEnumerable<ItemModel>> GetItemsAsync(int id)
-    {
-        throw new NotImplementedException();
+        return await Item_lineAcces.GetItemsAsync(id);
     }
 }

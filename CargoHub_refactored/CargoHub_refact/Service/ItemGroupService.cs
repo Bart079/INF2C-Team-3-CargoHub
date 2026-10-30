@@ -1,32 +1,64 @@
+using Project.DataAccess;
+
 public class ItemGroupService : IItemGroupService
-{
-    public Task<IEnumerable<ItemGroupModel>> GetAllAsync()
+{ //description niet nodig mag null zijn
+    private void ValidateItemGroup(ItemGroupModel model)
     {
-        throw new NotImplementedException();
+        ArgumentNullException.ThrowIfNull(model);
+        ArgumentException.ThrowIfNullOrWhiteSpace(model.Name);
+
+        if (Item_groupAcces.ValidateByName(model.Name))
+            throw new ArgumentException(
+                "Item group name already exists.",
+                nameof(model.Name));
+
+    }
+    public async Task<IEnumerable<ItemGroupModel>> GetAllAsync()
+    {
+        return await Item_groupAcces.GetAllAsync();
     }
 
-    public Task<ItemGroupModel?> GetByIdAsync(int id)
+    public async Task<ItemGroupModel?> GetByIdAsync(int id)
     {
-        throw new NotImplementedException();
+        if (id < 0)
+        return null;
+
+        return await Item_groupAcces.GetByIdAsync(id);
     }
 
-    public Task<ItemGroupModel> CreateAsync(ItemGroupModel model)
+    public async Task<ItemGroupModel> CreateAsync(ItemGroupModel model)
     {
-        throw new NotImplementedException();
+        ValidateItemGroup(model);
+        return await Item_groupAcces.CreateAsync(model);
     }
 
-    public Task<bool> UpdateAsync(int id, ItemGroupModel model)
+    public async Task<bool> UpdateAsync(int id, ItemGroupModel model)
     {
-        throw new NotImplementedException();
+        if (id < 0)
+        return false;
+
+        ValidateItemGroup(model);
+
+        if (id != model.ID)
+            throw new ArgumentException("The ID must match the model ID.", nameof(id));
+            
+        return await Item_groupAcces.UpdateAsync(id,model);
     }
 
-    public Task<bool> DeleteAsync(int id)
+    public async Task<bool> DeleteAsync(int id)
     {
-        throw new NotImplementedException();
+        if (id < 0)
+        return false;
+
+        return await Item_groupAcces.DeleteAsync(id);
     }
 
-    public Task<IEnumerable<ItemModel>> GetItemsAsync(int id)
+//checkt niet of ID ongeldig is of dat er geen orders zijn
+    public async Task<IEnumerable<ItemModel>> GetItemsAsync(int id)
     {
-        throw new NotImplementedException();
+        if (id < 0)
+        return Enumerable.Empty<ItemModel>(); //geeft een lege lijst
+        
+        return await Item_groupAcces.GetItemsAsync(id);
     }
 }

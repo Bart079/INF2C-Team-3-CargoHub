@@ -6,5 +6,5 @@ public interface IItemService
     Task<bool> UpdateAsync(long id, ItemModel model);
     Task<bool> DeleteAsync(long id);
     Task<IEnumerable<InventoryModel>?> GetInventoryAsync(long id);
-    Task<object?> GetInventoryTotalsAsync(long id);
+    Task<InventoryTotalsModel?> GetInventoryTotalsAsync(long id);
 }

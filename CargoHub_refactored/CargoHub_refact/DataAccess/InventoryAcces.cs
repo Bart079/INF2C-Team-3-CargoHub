@@ -4,6 +4,25 @@ public static class InventoryAcces
 {
     private static string _Table = "Inventory";
 
+    public static async Task<InventoryTotalsModel> GetInventoryTotalsAsync(long itemId)
+    {
+        using var connection = DatabaseConnection.CreateConnection();
+        await connection.OpenAsync();
+
+        const string sql = """
+            SELECT
+                @itemId AS Item_ID,
+                COALESCE(SUM(quantity_on_hand), 0) AS Total_Quantity_On_Hand,
+                COALESCE(SUM(quantity_expected), 0) AS Total_Quantity_Expected,
+                COALESCE(SUM(quantity_ordered), 0) AS Total_Quantity_Ordered,
+                COALESCE(SUM(quantity_allocated), 0) AS Total_Quantity_Allocated
+            FROM Inventory
+            WHERE item_id = @itemId;
+            """;
+
+        return await connection.QuerySingleAsync<InventoryTotalsModel>(sql, new { itemId });
+    }
+
     public static void CreateTable(string path)
     {
         string sql = $@"

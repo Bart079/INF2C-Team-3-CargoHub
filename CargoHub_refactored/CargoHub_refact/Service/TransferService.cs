@@ -1,37 +1,103 @@
+using Project.DataAccess;
+//using System.Linq;
 public class TransferService : ITransferService
 {
-    public Task<IEnumerable<TransferModel>> GetAllAsync()
+    private void ValidateTransfer(TransferModel model)
     {
-        throw new NotImplementedException();
+        ArgumentNullException.ThrowIfNull(model);
+        ArgumentException.ThrowIfNullOrWhiteSpace(model.Reference);
+        ArgumentOutOfRangeException.ThrowIfNegative(model.From_Location_ID);
+        ArgumentOutOfRangeException.ThrowIfNegative(model.To_Location_ID);
+        ArgumentException.ThrowIfNullOrWhiteSpace(model.Transfer_Status);
+
+        if (model.From_Location_ID == model.To_Location_ID)
+            throw new ArgumentException("From and To locations cannot be the same.");
+
+        if (LocationAcces.ValidateById(model.From_Location_ID))
+            throw new ArgumentException("From location ID is not valid / existing.", nameof(model.From_Location_ID));
+
+        if (LocationAcces.ValidateById(model.To_Location_ID))
+            throw new ArgumentException("To location ID is not valid / existing.", nameof(model.To_Location_ID));
+
+        if (model.Transfer_Status != "scheduled" && model.Transfer_Status != "processed")
+            throw new ArgumentException("Invalid transfer status.", nameof(model.Transfer_Status));
+
+        if (!Regex.IsMatch(model.Reference, @"^TRF-\d{6}$"))
+        {
+            throw new ArgumentException("Reference must start with 'TRF-' followed by 6 digits.", nameof(model.Code));
+        }
+}
+
+    public async Task<IEnumerable<TransferModel>> GetAllAsync()
+    {
+        return await TransferAcces.GetAllAsync();
     }
 
-    public Task<TransferModel?> GetByIdAsync(int id)
+    public async Task<TransferModel?> GetByIdAsync(int id)
     {
-        throw new NotImplementedException();
+        if (id < 0)
+        return null;
+
+        return await TransferAcces.GetByIdAsync(id);
     }
 
-    public Task<TransferModel> CreateAsync(TransferModel model)
+    public async Task<TransferModel> CreateAsync(TransferModel model)
     {
-        throw new NotImplementedException();
+        ValidateTransfer(model);
+
+        return await TransferAcces.CreateAsync(model);
     }
 
-    public Task<bool> UpdateAsync(int id, TransferModel model)
+    public async Task<bool> UpdateAsync(int id, TransferModel model)
     {
-        throw new NotImplementedException();
+        if (id < 0)
+        return false;
+
+        var updatetransfer = await TransferAcces.GetByIdAsync(id);
+
+        if (updatetransfer == null)
+        return false;
+        
+        if (updatetransfer.Transfer_Status == "processed") //voorkomt verwerkt transfer aanpassen
+        return false;
+        
+        ValidateTransfer(model);
+
+        if (model.Transfer_Status == "processed") //voorkomt via gewone update dat transfer op processed wordt gezet
+        return false;
+
+        return await TransferAcces.UpdateAsync(id,model);
     }
 
-    public Task<bool> DeleteAsync(int id)
+    public async Task<bool> DeleteAsync(int id)
     {
-        throw new NotImplementedException();
+        if (id < 0)
+        return false;
+        
+        return await TransferAcces.DeleteAsync(id);
     }
 
-    public Task<IEnumerable<TransferItemModel>> GetItemsAsync(int id)
+    public async Task<IEnumerable<TransferItemModel>> GetItemsAsync(int id)
     {
-        throw new NotImplementedException();
+        if (id < 0)
+        return Enumerable.Empty<TransferItemModel>(); //geeft een lege lijst
+        
+        return await TransferAcces.GetItemsAsync(id);
     }
 
-    public Task<bool> CommitAsync(int id)
+    public async Task<bool> CommitAsync(int id)
     {
-        throw new NotImplementedException();
-    }
+        if (id < 0)
+        return false;
+
+        var transfer = await TransferAcces.GetByIdAsync(id);
+
+        if (transfer == null)
+        return false;
+
+        if (transfer.Transfer_Status == "scheduled")
+        return await TransferAcces.CommitAsync(id);
+
+        return false;
+    }//data laag check of er niet 2 gelijktijdige verzoeken dezelfde transfer verwerken
 }

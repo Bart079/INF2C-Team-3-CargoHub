@@ -1,27 +1,58 @@
+using Project.DataAccess;
+
 public class LocationService : ILocationService
 {
-    public Task<IEnumerable<LocationModel>> GetAllAsync()
+    private void ValidateLocation(LocationModel model)
     {
-        throw new NotImplementedException();
+        ArgumentNullException.ThrowIfNull(model);
+
+        ArgumentOutOfRangeException.ThrowIfNegative(model.Warehouse_ID);
+        ArgumentException.ThrowIfNullOrWhiteSpace(model.Code);
+        ArgumentException.ThrowIfNullOrWhiteSpace(model.Name);
+
+        if (WarehouseAcces.ValidateById(model.Warehouse_ID))
+            throw new ArgumentException(
+                "Warehouse ID is not valid / existing.",
+                nameof(model.Warehouse_ID));
+    }
+    public async Task<IEnumerable<LocationModel>> GetAllAsync()
+    {
+        return await LocationAcces.GetAllAsync();
     }
 
-    public Task<LocationModel?> GetByIdAsync(int id)
+    public async Task<LocationModel?> GetByIdAsync(int id)
     {
-        throw new NotImplementedException();
+        if (id < 0)
+        return null;
+
+        return await LocationAcces.GetByIdAsync(id );
     }
 
-    public Task<LocationModel> CreateAsync(LocationModel model)
+    public async Task<LocationModel> CreateAsync(LocationModel model)
     {
-        throw new NotImplementedException();
+        ValidateLocation(model);
+
+        return await LocationAcces.CreateAsync(model);
     }
 
-    public Task<bool> UpdateAsync(int id, LocationModel model)
+    public async Task<bool> UpdateAsync(int id, LocationModel model)
     {
-        throw new NotImplementedException();
+        if (id < 0)
+        return false;
+
+        ValidateLocation(model);
+
+        if (id != model.ID)
+            throw new ArgumentException("The ID must match the model ID.", nameof(id));
+
+        return await LocationAcces.UpdateAsync(id,model);
     }
 
-    public Task<bool> DeleteAsync(int id)
+    public async Task<bool> DeleteAsync(int id)
     {
-        throw new NotImplementedException();
+        if (id < 0)
+            return false;
+
+        return await LocationAcces.DeleteAsync(id);
     }
 }

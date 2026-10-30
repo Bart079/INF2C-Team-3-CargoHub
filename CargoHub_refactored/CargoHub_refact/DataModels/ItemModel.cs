@@ -1,6 +1,6 @@
 public class ItemModel
 {
-    public Int64 ID { get; set; }
+    public long ID { get; set; }
 
     public string Code { get; set; } = "";
 
@@ -14,11 +14,11 @@ public class ItemModel
 
     public decimal Unit_Weight { get; set; }
 
-    public Int64 Item_Line_ID { get; set; }
+    public long Item_Line_ID { get; set; }
 
-    public Int64 Item_Group_ID { get; set; }
+    public long Item_Group_ID { get; set; }
 
-    public Int64 Item_Type_ID { get; set; }
+    public long Item_Type_ID { get; set; }
 
     public int Min_Purchase_Quantity { get; set; }
 
@@ -28,7 +28,7 @@ public class ItemModel
 
     public int Order_Multiple { get; set; }
 
-    public Int64 Supplier_ID { get; set; }
+    public long Supplier_ID { get; set; }
 
     public string Supplier_SKU { get; set; } = "";
 
@@ -41,21 +41,21 @@ public class ItemModel
     }
 
     public ItemModel(
-        Int64 id,
+        long id,
         string code,
         string description,
         string barcode,
         string model_Number,
         int commodity_Code,
         decimal unit_Weight,
-        Int64 item_Line_ID,
-        Int64 item_Group_ID,
-        Int64 item_Type_ID,
+        long item_Line_ID,
+        long item_Group_ID,
+        long item_Type_ID,
         int min_purchase_quantity,
         int case_Size,
         string packaging_Type,
         int order_Multiple,
-        Int64 supplier_ID,
+        long supplier_ID,
         string supplier_SKU,
         DateTime created_At,
         DateTime updated_At)
