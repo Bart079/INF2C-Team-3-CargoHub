@@ -4,32 +4,30 @@ public class ShipmentService : IShipmentService
 {
     private void ValidateShipment(ShipmentModel model)
     {
-        if (model == null)
-            throw new ArgumentNullException(nameof(model));
-//maybe validatie opsplitsen aanmaken en aanpassen (als database ids geeft)
-        if (model.ID <= 0)
-            throw new ArgumentException("ID must be greater than 0.", nameof(model.ID));
+        ArgumentNullException.ThrowIfNull(model);
+        ArgumentOutOfRangeException.ThrowIfNegative(model.ID);
+        ArgumentException.ThrowIfNullOrWhiteSpace(model.Reference);
+        ArgumentOutOfRangeException.ThrowIfNegative(model.Order_ID);
+        ArgumentException.ThrowIfNullOrWhiteSpace(model.Shipment_Type);
+        ArgumentException.ThrowIfNullOrWhiteSpace(model.Shipment_Status);
+        ArgumentException.ThrowIfNullOrWhiteSpace(model.Carrier_Name);
+        ArgumentException.ThrowIfNullOrWhiteSpace(model.Shipping_Method);
+        ArgumentException.ThrowIfNullOrWhiteSpace(model.Payment_Type);
 
-        if (string.IsNullOrWhiteSpace(model.Reference))
-            throw new ArgumentException("Reference cannot be empty.", nameof(model.Reference));
+        if (model.Shipment_Status != "Transit" && model.Shipment_Status != "Scheduled")
+        {
+            throw new ArgumentException("Invalid shipment status.", nameof(model.Shipment_Status));
+        }
 
-        if (model.Order_ID <= 0)
-            throw new ArgumentException("Order ID must be greater than 0.", nameof(model.Order_ID));
+        if (model.Shipping_Method != "Express" && model.Shipping_Method != "Standard")
+        {
+            throw new ArgumentException("Invalid shipping method.", nameof(model.Shipping_Method));
+        }
 
-        if (string.IsNullOrWhiteSpace(model.Shipment_Type))
-            throw new ArgumentException("Shipment type cannot be empty.", nameof(model.Shipment_Type));
-
-        if (string.IsNullOrWhiteSpace(model.Shipment_Status))
-            throw new ArgumentException("Shipment status cannot be empty.", nameof(model.Shipment_Status));
-
-        if (string.IsNullOrWhiteSpace(model.Carrier_Name))
-            throw new ArgumentException("Carrier name cannot be empty.", nameof(model.Carrier_Name));
-
-        if (string.IsNullOrWhiteSpace(model.Shipping_Method))
-            throw new ArgumentException("Shipping method cannot be empty.", nameof(model.Shipping_Method));
-
-        if (string.IsNullOrWhiteSpace(model.Payment_Type))
-            throw new ArgumentException("Payment type cannot be empty.", nameof(model.Payment_Type));
+        if (model.Payment_Type != "Automated" && model.Payment_Type != "Manual")
+        {
+            throw new ArgumentException("Invalid payment type.", nameof(model.Payment_Type));
+        }
     }
 
     public async Task<IEnumerable<ShipmentModel>> GetAllAsync()
@@ -39,7 +37,7 @@ public class ShipmentService : IShipmentService
 
     public async Task<ShipmentModel?> GetByIdAsync(int id)
     {
-        if (id <= 0)
+        if (id < 0)
             return null;
 
         return await ShipmentAcces.GetByIdAsync(id);
@@ -54,7 +52,7 @@ public class ShipmentService : IShipmentService
 
     public async Task<bool> UpdateAsync(int id, ShipmentModel model)
     {
-        if (id <= 0)
+        if (id < 0)
             return false;
 
         ValidateShipment(model);
@@ -67,7 +65,7 @@ public class ShipmentService : IShipmentService
 
     public async Task<bool> DeleteAsync(int id)
     {
-        if (id <= 0)
+        if (id < 0)
             return false;
 
         return await ShipmentAcces.DeleteAsync(id);
@@ -76,7 +74,7 @@ public class ShipmentService : IShipmentService
     // Haalt de order-ID's van een shipment op
     public async Task<IEnumerable<int>> GetOrdersAsync(int id)
     {
-        if (id <= 0)
+        if (id < 0)
             return Enumerable.Empty<int>();
 
         return await ShipmentAcces.GetOrdersAsync(id);
@@ -85,7 +83,7 @@ public class ShipmentService : IShipmentService
     // Haalt de items van een shipment op
     public async Task<IEnumerable<ShipmentItemModel>> GetItemsAsync(int id)
     {
-        if (id <= 0)
+        if (id < 0)
             return Enumerable.Empty<ShipmentItemModel>();
 
         return await ShipmentAcces.GetItemsAsync(id);
@@ -93,13 +91,13 @@ public class ShipmentService : IShipmentService
 
     public async Task<bool> UpdateOrdersAsync(int id, IEnumerable<int> orderIds)
     {
-        if (id <= 0)
+        if (id < 0)
             return false;
 
         if (orderIds == null)
             throw new ArgumentNullException(nameof(orderIds));
 
-        if (orderIds.Any(orderId => orderId <= 0))
+        if (orderIds.Any(orderId => orderId < 0))
             throw new ArgumentException("Order IDs must be greater than 0.", nameof(orderIds));
 
         return await ShipmentAcces.UpdateOrdersAsync(id, orderIds);
@@ -107,7 +105,7 @@ public class ShipmentService : IShipmentService
 
     public async Task<bool> UpdateItemsAsync(int id,IEnumerable<ShipmentItemModel> items)
     {
-        if (id <= 0)
+        if (id < 0)
             return false;
 
         if (items == null)
@@ -116,4 +114,3 @@ public class ShipmentService : IShipmentService
         return await ShipmentAcces.UpdateItemsAsync(id, items);
     }
 }
-

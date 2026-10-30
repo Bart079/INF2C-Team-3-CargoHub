@@ -4,26 +4,17 @@ public class InventoryService : IInventoryService
 {
     private void ValidateInventory(InventoryModel model)
 {
-    if (model == null)
-        throw new ArgumentNullException(nameof(model));
+    ArgumentNullException.ThrowIfNull(model);
+    ArgumentOutOfRangeException.ThrowIfNegative(model.Quantity_On_Hand);
+    ArgumentOutOfRangeException.ThrowIfNegative(model.Quantity_Expected);
+    ArgumentOutOfRangeException.ThrowIfNegative(model.Quantity_Ordered);
+    ArgumentOutOfRangeException.ThrowIfNegative(model.Quantity_Allocated);
 
-    if (model.Item_ID <= 0)
-    throw new ArgumentException("Item ID must be greater than 0.");
+    if (ItemAcces.ValidatedById(model.Item_ID))
+        throw new ArgumentException("Item ID is not valid / existing.", nameof(model.Item_ID));
 
-    if (model.Location_ID <= 0)
-    throw new ArgumentException("Location ID must be greater than 0.");
-
-    if (model.Quantity_On_Hand <= 0)
-        throw new ArgumentException("Quantity on hand must be greater than 0.");
-
-    if (model.Quantity_Expected <= 0)
-        throw new ArgumentException("Quantity expected must be greater than 0.");
-
-    if (model.Quantity_Ordered <= 0)
-        throw new ArgumentException("Quantity ordered must be greater than 0.");
-
-    if (model.Quantity_Allocated <= 0)
-        throw new ArgumentException("Quantity allocated must be greater than 0.");
+    if (LocationAcces.ValidatedById(model.Location_ID))
+        throw new ArgumentException("Location ID is not valid / existing.", nameof(model.Location_ID));
 }
     public async Task<IEnumerable<InventoryModel>> GetAllAsync()
     {
@@ -32,7 +23,7 @@ public class InventoryService : IInventoryService
 
     public async Task<InventoryModel?> GetByIdAsync(int id)
     {
-        if (id <= 0)
+        if (id < 0)
         return null;
 
         return await InventoryAcces.GetByIdAsync(id);
@@ -47,7 +38,7 @@ public class InventoryService : IInventoryService
 
     public async Task<bool> UpdateAsync(int id, InventoryModel model)
     {
-        if (id <= 0)
+        if (id < 0)
         return false;
 
         ValidateInventory(model);
@@ -57,7 +48,7 @@ public class InventoryService : IInventoryService
 
     public async Task<bool> DeleteAsync(int id)
     {
-        if (id <= 0)
+        if (id < 0)
         return false;
 
         return await InventoryAcces.DeleteAsync(id);

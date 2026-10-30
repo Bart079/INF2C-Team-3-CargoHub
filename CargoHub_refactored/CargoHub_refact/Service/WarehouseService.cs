@@ -4,47 +4,27 @@ using System.Text.RegularExpressions;
 public class WarehouseService : IWarehouseService
 {
     private void ValidateWarehouse(WarehouseModel model)
-{
-        if (model == null)
-            throw new ArgumentNullException(nameof(model));
+    {
+            ArgumentNullException.ThrowIfNull(model);
 
-        if (string.IsNullOrWhiteSpace(model.Code))
-            throw new ArgumentException("Code cannot be empty.", nameof(model.Code));
+            ArgumentException.ThrowIfNullOrWhiteSpace(model.Code);
+            ArgumentException.ThrowIfNullOrWhiteSpace(model.Name);
+            ArgumentException.ThrowIfNullOrWhiteSpace(model.Address);
+            ArgumentException.ThrowIfNullOrWhiteSpace(model.City);
+            ArgumentException.ThrowIfNullOrWhiteSpace(model.Zip_Code);
+            ArgumentException.ThrowIfNullOrWhiteSpace(model.Province);
+            ArgumentException.ThrowIfNullOrWhiteSpace(model.Country);
+            ArgumentException.ThrowIfNullOrWhiteSpace(model.Contact_Name);
+            ArgumentException.ThrowIfNullOrWhiteSpace(model.Contact_Email);
 
-        if (string.IsNullOrWhiteSpace(model.Name)) 
-            throw new ArgumentException("Name cannot be empty.", nameof(model.Name));
-            
-        if (string.IsNullOrWhiteSpace(model.Address))
-            throw new ArgumentException("Address cannot be empty.", nameof(model.Address));
-        
-        if (string.IsNullOrWhiteSpace(model.City))
-            throw new ArgumentException("City cannot be empty.", nameof(model.City));
+            if (!new EmailAddressAttribute().IsValid(model.Contact_Email))
+                throw new ArgumentException("Email address is invalid");
 
-        if (string.IsNullOrWhiteSpace(model.Zip_Code))
-            throw new ArgumentException("Zip code cannot be empty.", nameof(model.Zip_Code));
+            ArgumentException.ThrowIfNullOrWhiteSpace(model.Contact_Phone);
 
-        if (string.IsNullOrWhiteSpace(model.Province))
-            throw new ArgumentException("Province cannot be empty.", nameof(model.Province));
-
-        if (string.IsNullOrWhiteSpace(model.Country))
-            throw new ArgumentException("Country cannot be empty.", nameof(model.Country));
-        
-        if (string.IsNullOrWhiteSpace(model.Contact_Name))
-            throw new ArgumentException("Contact name cannot be empty.");
-
-        if (string.IsNullOrWhiteSpace(model.Contact_Email))
-            throw new ArgumentException("Email cannot be empty.");
-
-        if (!new EmailAddressAttribute().IsValid(model.Contact_Email))
-            throw new ArgumentException("Email address is invalid");
-
-        if (string.IsNullOrWhiteSpace(model.Contact_Phone))
-            throw new ArgumentException("Phone number cannot be empty.");
-
-        if (!Regex.IsMatch(model.Contact_Phone, @"^\+?[0-9 ]+$"))
-            throw new ArgumentException("Phone number is invalid.");
-
-    }
+            if (!Regex.IsMatch(model.Contact_Phone, @"^\+?[0-9 ]+$"))
+                throw new ArgumentException("Phone number is invalid.");
+        }
     public async Task<IEnumerable<WarehouseModel>> GetAllAsync()
     {
         return await WarehouseAcces.GetAllAsync();
@@ -52,7 +32,7 @@ public class WarehouseService : IWarehouseService
 
     public async Task<WarehouseModel?> GetByIdAsync(int id)
     {
-        if (id <= 0)
+        if (id < 0)
         return null;
 
         return await WarehouseAcces.GetByIdAsync(id);
@@ -67,7 +47,7 @@ public class WarehouseService : IWarehouseService
 
     public async Task<bool> UpdateAsync(int id, WarehouseModel model)
     {
-        if (id <= 0)
+        if (id < 0)
         return false;
 
         ValidateWarehouse(model);
@@ -80,7 +60,7 @@ public class WarehouseService : IWarehouseService
 
     public async Task<bool> DeleteAsync(int id)
     {
-        if (id <= 0)
+        if (id < 0)
             return false;
 
         return await WarehouseAcces.DeleteAsync(id);
@@ -89,7 +69,7 @@ public class WarehouseService : IWarehouseService
 //checkt niet of ID ongeldig is of dat er geen orders zijn
     public async Task<IEnumerable<LocationModel>> GetLocationsAsync(int id)
     {
-        if (id <= 0)
+        if (id < 0)
         return Enumerable.Empty<LocationModel>(); //geeft een lege lijst
 
         return await WarehouseAcces.GetLocationsAsync(id);
