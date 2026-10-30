@@ -8,10 +8,9 @@ public class ItemTypeService : IItemTypeService
         ArgumentException.ThrowIfNullOrWhiteSpace(model.Name);
         ArgumentException.ThrowIfNullOrWhiteSpace(model.Description);
 
-        if (model.Name != "Single" && model.Name != "Multipack" && model.Name != "Bulk/Crate")
-        {
+        // Controleer of de naam een bestaande ItemType is
+        if (Item_typeAcces.ValidatedByName(model.Name))
             throw new ArgumentException("Invalid type name.", nameof(model.Name));
-        }
     }
     public async Task<IEnumerable<ItemTypeModel>> GetAllAsync()
     {
