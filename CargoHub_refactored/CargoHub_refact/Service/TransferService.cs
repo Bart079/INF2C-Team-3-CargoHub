@@ -21,6 +21,11 @@ public class TransferService : ITransferService
 
         if (model.Transfer_Status != "scheduled" && model.Transfer_Status != "processed")
             throw new ArgumentException("Invalid transfer status.", nameof(model.Transfer_Status));
+
+        if (!Regex.IsMatch(model.Reference, @"^TRF-\d{6}$"))
+        {
+            throw new ArgumentException("Reference must start with 'TRF-' followed by 6 digits.", nameof(model.Code));
+        }
 }
 
     public async Task<IEnumerable<TransferModel>> GetAllAsync()

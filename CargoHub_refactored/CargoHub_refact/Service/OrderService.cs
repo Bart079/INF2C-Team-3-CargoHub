@@ -9,7 +9,7 @@ public class OrderService : IOrderService
     ArgumentException.ThrowIfNullOrWhiteSpace(model.Reference);
     ArgumentException.ThrowIfNullOrWhiteSpace(model.Customer_PO_Number);
     ArgumentException.ThrowIfNullOrWhiteSpace(model.Order_Status);
-    ArgumentException.ThrowIfNullOrWhiteSpace(model.Shipping_Notes);
+    //ArgumentException.ThrowIfNullOrWhiteSpace(model.Shipping_Notes); mag null zijn maar whitespace wel nodig?
     ArgumentOutOfRangeException.ThrowIfNegative(model.Warehouse_ID);
     ArgumentOutOfRangeException.ThrowIfNegative(model.Ship_To_Client_ID);
     ArgumentOutOfRangeException.ThrowIfNegative(model.Bill_To_Client_ID);
@@ -30,7 +30,6 @@ public class OrderService : IOrderService
 
     if (ClientAcces.ValidateById(model.Bill_To_Client_ID))
         throw new ArgumentException("Bill-to client ID does not exist.", nameof(model.Bill_To_Client_ID));
-
 }
     public async Task<IEnumerable<OrderModel>> GetAllAsync()
     {

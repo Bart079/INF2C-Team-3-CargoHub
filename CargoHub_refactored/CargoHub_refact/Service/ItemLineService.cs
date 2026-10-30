@@ -7,8 +7,14 @@ public class ItemLineService : IItemLineService
         ArgumentNullException.ThrowIfNull(model);
         ArgumentException.ThrowIfNullOrWhiteSpace(model.Name);
         ArgumentException.ThrowIfNullOrWhiteSpace(model.Description);
-    }
 
+        if (Item_lineAcces.ValidateByName(model.Name))
+        throw new ArgumentException("Invalid item line name.", nameof(model.Name));
+    }
+    public async Task<IEnumerable<ItemLineModel>> GetAllAsync()
+    {
+        return await Item_lineAcces.GetAllAsync();
+    }
     public async Task<ItemLineModel?> GetByIdAsync(int id)
     {
         if (id < 0)

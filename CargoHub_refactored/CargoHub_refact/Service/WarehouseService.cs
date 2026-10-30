@@ -5,26 +5,31 @@ public class WarehouseService : IWarehouseService
 {
     private void ValidateWarehouse(WarehouseModel model)
     {
-            ArgumentNullException.ThrowIfNull(model);
+        ArgumentNullException.ThrowIfNull(model);
 
-            ArgumentException.ThrowIfNullOrWhiteSpace(model.Code);
-            ArgumentException.ThrowIfNullOrWhiteSpace(model.Name);
-            ArgumentException.ThrowIfNullOrWhiteSpace(model.Address);
-            ArgumentException.ThrowIfNullOrWhiteSpace(model.City);
-            ArgumentException.ThrowIfNullOrWhiteSpace(model.Zip_Code);
-            ArgumentException.ThrowIfNullOrWhiteSpace(model.Province);
-            ArgumentException.ThrowIfNullOrWhiteSpace(model.Country);
-            ArgumentException.ThrowIfNullOrWhiteSpace(model.Contact_Name);
-            ArgumentException.ThrowIfNullOrWhiteSpace(model.Contact_Email);
+        ArgumentException.ThrowIfNullOrWhiteSpace(model.Code);
+        ArgumentException.ThrowIfNullOrWhiteSpace(model.Name);
+        ArgumentException.ThrowIfNullOrWhiteSpace(model.Address);
+        ArgumentException.ThrowIfNullOrWhiteSpace(model.City);
+        ArgumentException.ThrowIfNullOrWhiteSpace(model.Zip_Code);
+        ArgumentException.ThrowIfNullOrWhiteSpace(model.Province);
+        ArgumentException.ThrowIfNullOrWhiteSpace(model.Country);
+        ArgumentException.ThrowIfNullOrWhiteSpace(model.Contact_Name);
+        ArgumentException.ThrowIfNullOrWhiteSpace(model.Contact_Email);
 
-            if (!new EmailAddressAttribute().IsValid(model.Contact_Email))
-                throw new ArgumentException("Email address is invalid");
+        if (!new EmailAddressAttribute().IsValid(model.Contact_Email))
+            throw new ArgumentException("Email address is invalid");
 
-            ArgumentException.ThrowIfNullOrWhiteSpace(model.Contact_Phone);
+        ArgumentException.ThrowIfNullOrWhiteSpace(model.Contact_Phone);
 
-            if (!Regex.IsMatch(model.Contact_Phone, @"^\+?[0-9 ]+$"))
-                throw new ArgumentException("Phone number is invalid.");
+        if (!Regex.IsMatch(model.Contact_Phone, @"^\+?[0-9 ]+$"))
+            throw new ArgumentException("Phone number is invalid.");
+    
+        if (!Regex.IsMatch(model.Zip_Code, @"^[1-9][0-9]{3}\s?[A-Za-z]{2}$"))
+        {
+            throw new ArgumentException("Invalid zip code.", nameof(model.Zip_Code));
         }
+}
     public async Task<IEnumerable<WarehouseModel>> GetAllAsync()
     {
         return await WarehouseAcces.GetAllAsync();

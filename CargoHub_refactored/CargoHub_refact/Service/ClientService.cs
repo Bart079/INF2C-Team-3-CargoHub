@@ -11,8 +11,8 @@ private void ValidateClient(ClientModel model)
         ArgumentException.ThrowIfNullOrWhiteSpace(model.Address);
         ArgumentException.ThrowIfNullOrWhiteSpace(model.City);
         ArgumentException.ThrowIfNullOrWhiteSpace(model.Zip_Code);
-        ArgumentException.ThrowIfNullOrWhiteSpace(model.Country);
         ArgumentException.ThrowIfNullOrWhiteSpace(model.Province);
+        ArgumentException.ThrowIfNullOrWhiteSpace(model.Country);
         ArgumentException.ThrowIfNullOrWhiteSpace(model.Contact_Name);
         ArgumentException.ThrowIfNullOrWhiteSpace(model.Contact_Email);
 
@@ -27,6 +27,11 @@ private void ValidateClient(ClientModel model)
         var digits = Regex.Replace(model.Contact_Phone, @"\D", "");
         if (digits.Length < 8)
             throw new ArgumentException("Phone number is too short.");
+
+        if (!Regex.IsMatch(model.Zip_Code, @"^[1-9][0-9]{3}\s?[A-Za-z]{2}$"))
+        {
+            throw new ArgumentException("Invalid zip code.", nameof(model.Zip_Code));
+        }
 }
 
     public async Task<IEnumerable<ClientModel>> GetAllAsync()

@@ -7,6 +7,8 @@ public class ItemGroupService : IItemGroupService
         ArgumentNullException.ThrowIfNull(model);
         ArgumentException.ThrowIfNullOrWhiteSpace(model.Name);
 
+        if (Item_typeAcces.ValidateByName(model.Name))
+            throw new ArgumentException("Invalid type name.", nameof(model.Name));
     }
     public async Task<IEnumerable<ItemGroupModel>> GetAllAsync()
     {
@@ -31,13 +33,12 @@ public class ItemGroupService : IItemGroupService
     {
         if (id < 0)
         return false;
-        
+
         ValidateItemGroup(model);
 
         if (id != model.ID)
             throw new ArgumentException("The ID must match the model ID.", nameof(id));
-
-
+            
         return await Item_groupAcces.UpdateAsync(id,model);
     }
 
