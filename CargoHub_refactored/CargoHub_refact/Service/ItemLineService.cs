@@ -27,8 +27,12 @@ public class ItemLineService : IItemLineService
     {
         if (id < 0)
         return false;
-
+        
         ValidateItemLine(model);
+
+        if (id != model.ID)
+            throw new ArgumentException("The ID must match the model ID.", nameof(id));
+
         return await Item_lineAcces.UpdateAsync(id,model);
     }
 

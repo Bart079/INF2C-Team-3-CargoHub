@@ -54,7 +54,12 @@ public class ItemService : IItemService
         if (id < 0)
         return false;
 
-        ValidateItem(model);
+        ValidateItem(model);    
+            
+        if (id != model.ID)
+            throw new ArgumentException("The ID must match the model ID.", nameof(id));
+
+
 
         return await ItemAcces.UpdateAsync(id,model);
     }

@@ -10,12 +10,18 @@ public class TransferService : ITransferService
         ArgumentOutOfRangeException.ThrowIfNegative(model.To_Location_ID);
         ArgumentException.ThrowIfNullOrWhiteSpace(model.Transfer_Status);
 
-        if (LocationAcces.ValidatedById(model.From_Location_ID))
+        if (model.From_Location_ID == model.To_Location_ID)
+            throw new ArgumentException("From and To locations cannot be the same.");
+
+        if (LocationAcces.ValidateById(model.From_Location_ID))
             throw new ArgumentException("From location ID is not valid / existing.", nameof(model.From_Location_ID));
 
-        if (LocationAcces.ValidatedById(model.To_Location_ID))
+        if (LocationAcces.ValidateById(model.To_Location_ID))
             throw new ArgumentException("To location ID is not valid / existing.", nameof(model.To_Location_ID));
-    }
+
+        if (model.Transfer_Status != "scheduled" && model.Transfer_Status != "processed")
+            throw new ArgumentException("Invalid transfer status.", nameof(model.Transfer_Status));
+}
 
     public async Task<IEnumerable<TransferModel>> GetAllAsync()
     {

@@ -5,7 +5,6 @@ public class ShipmentService : IShipmentService
     private void ValidateShipment(ShipmentModel model)
     {
         ArgumentNullException.ThrowIfNull(model);
-        ArgumentOutOfRangeException.ThrowIfNegative(model.ID);
         ArgumentException.ThrowIfNullOrWhiteSpace(model.Reference);
         ArgumentOutOfRangeException.ThrowIfNegative(model.Order_ID);
         ArgumentException.ThrowIfNullOrWhiteSpace(model.Shipment_Type);
@@ -27,6 +26,11 @@ public class ShipmentService : IShipmentService
         if (model.Payment_Type != "Automated" && model.Payment_Type != "Manual")
         {
             throw new ArgumentException("Invalid payment type.", nameof(model.Payment_Type));
+        }
+
+        if (OrderAcces.ValidateById(model.Order_ID))
+        {
+            throw new ArgumentException("Order ID does not exist.", nameof(model.Order_ID));
         }
     }
 

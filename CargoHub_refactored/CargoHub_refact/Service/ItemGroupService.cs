@@ -31,8 +31,13 @@ public class ItemGroupService : IItemGroupService
     {
         if (id < 0)
         return false;
-
+        
         ValidateItemGroup(model);
+
+        if (id != model.ID)
+            throw new ArgumentException("The ID must match the model ID.", nameof(id));
+
+
         return await Item_groupAcces.UpdateAsync(id,model);
     }
 

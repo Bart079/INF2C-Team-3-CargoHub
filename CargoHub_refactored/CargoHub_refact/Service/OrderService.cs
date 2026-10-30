@@ -18,6 +18,19 @@ public class OrderService : IOrderService
         {
             throw new ArgumentException("Invalid order status.", nameof(model.Order_Status));
         }
+
+    if (ClientAcces.ValidateById(model.Client_ID))
+        throw new ArgumentException("Client ID does not exist.", nameof(model.Client_ID));
+
+    if (WarehouseAcces.ValidateById(model.Warehouse_ID))
+        throw new ArgumentException("Warehouse ID does not exist.", nameof(model.Warehouse_ID));
+
+    if (ClientAcces.ValidateById(model.Ship_To_Client_ID))
+        throw new ArgumentException("Ship-to client ID does not exist.", nameof(model.Ship_To_Client_ID));
+
+    if (ClientAcces.ValidateById(model.Bill_To_Client_ID))
+        throw new ArgumentException("Bill-to client ID does not exist.", nameof(model.Bill_To_Client_ID));
+
 }
     public async Task<IEnumerable<OrderModel>> GetAllAsync()
     {
@@ -44,7 +57,10 @@ public class OrderService : IOrderService
         if (id < 0)
         return false;
 
-        ValidateOrder(model);
+        ValidateOrder(model);      
+
+        if (id != model.ID)
+            throw new ArgumentException("The ID must match the model ID.", nameof(id));
 
         return await OrderAcces.UpdateAsync(id,model);
     }

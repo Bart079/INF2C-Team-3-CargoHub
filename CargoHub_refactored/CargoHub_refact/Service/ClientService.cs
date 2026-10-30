@@ -54,6 +54,9 @@ private void ValidateClient(ClientModel model)
         if (id < 0)
         return false;
 
+        if (id != model.ID)
+            throw new ArgumentException("The ID must match the model ID.", nameof(id));
+
         ValidateClient(model);
 
         return await ClientAcces.UpdateAsync(id,model);

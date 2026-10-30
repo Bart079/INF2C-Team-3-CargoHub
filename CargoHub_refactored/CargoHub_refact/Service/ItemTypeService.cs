@@ -9,7 +9,7 @@ public class ItemTypeService : IItemTypeService
         ArgumentException.ThrowIfNullOrWhiteSpace(model.Description);
 
         // Controleer of de naam een bestaande ItemType is
-        if (Item_typeAcces.ValidatedByName(model.Name))
+        if (Item_typeAcces.ValidateByName(model.Name))
             throw new ArgumentException("Invalid type name.", nameof(model.Name));
     }
     public async Task<IEnumerable<ItemTypeModel>> GetAllAsync()
@@ -38,6 +38,9 @@ public class ItemTypeService : IItemTypeService
         return false;
 
         ValidateItemType(model);
+        
+        if (id != model.ID)
+            throw new ArgumentException("The ID must match the model ID.", nameof(id));
 
         return await Item_typeAcces.UpdateAsync(id,model);
     }

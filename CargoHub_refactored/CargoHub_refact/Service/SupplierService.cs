@@ -51,8 +51,7 @@ public class SupplierService : ISupplierService
         ValidateSupplier(model);
 
         if (id != model.ID)
-            throw new ArgumentException(
-                "The ID must match the model ID.", nameof(id));
+            throw new ArgumentException("The ID must match the model ID.", nameof(id));
 
         return await SupplierAcces.UpdateAsync(id, model);
     }
