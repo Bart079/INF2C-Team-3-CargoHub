@@ -7,8 +7,11 @@ public class ItemGroupService : IItemGroupService
         ArgumentNullException.ThrowIfNull(model);
         ArgumentException.ThrowIfNullOrWhiteSpace(model.Name);
 
-        if (Item_typeAcces.ValidateByName(model.Name))
-            throw new ArgumentException("Invalid type name.", nameof(model.Name));
+        if (Item_groupAcces.ValidateByName(model.Name))
+            throw new ArgumentException(
+                "Item group name already exists.",
+                nameof(model.Name));
+
     }
     public async Task<IEnumerable<ItemGroupModel>> GetAllAsync()
     {
