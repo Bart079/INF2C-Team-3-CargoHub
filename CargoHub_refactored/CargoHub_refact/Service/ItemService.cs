@@ -79,6 +79,6 @@ public class ItemService : IItemService
         if (id < 0)
         return null;
 
-        return await InventoryAcces.GetInventoryTotalsAsync(id);
+        return await InventoryAcces.GetInventoryTotals(id);
     }
 }

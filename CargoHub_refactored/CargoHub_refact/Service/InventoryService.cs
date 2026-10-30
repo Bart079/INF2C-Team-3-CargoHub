@@ -18,7 +18,7 @@ public class InventoryService : IInventoryService
 }
     public async Task<IEnumerable<InventoryModel>> GetAllAsync()
     {
-        return await InventoryAcces.GetAllAsync();
+        return await InventoryAcces.GetAll();
     }
 
     public async Task<InventoryModel?> GetByIdAsync(int id)
@@ -26,14 +26,14 @@ public class InventoryService : IInventoryService
         if (id < 0)
         return null;
 
-        return await InventoryAcces.GetByIdAsync(id);
+        return await InventoryAcces.GetById(id);
     }
 
     public async Task<InventoryModel> CreateAsync(InventoryModel model)
     {
         ValidateInventory(model);
 
-        return await InventoryAcces.CreateAsync(model);
+        return await InventoryAcces.Create(model);
     }
 
     public async Task<bool> UpdateAsync(int id, InventoryModel model)
@@ -43,7 +43,7 @@ public class InventoryService : IInventoryService
 
         ValidateInventory(model);
 
-        return await InventoryAcces.UpdateAsync(id,model);
+        return await InventoryAcces.Update(id,model);
     }
 
     public async Task<bool> DeleteAsync(int id)
@@ -51,6 +51,6 @@ public class InventoryService : IInventoryService
         if (id < 0)
         return false;
 
-        return await InventoryAcces.DeleteAsync(id);
+        return await InventoryAcces.Delete(id);
     }
 }

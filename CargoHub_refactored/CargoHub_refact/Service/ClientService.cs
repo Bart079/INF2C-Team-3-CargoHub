@@ -31,7 +31,7 @@ private void ValidateClient(ClientModel model)
 
     public async Task<IEnumerable<ClientModel>> GetAllAsync()
     {
-        return await ClientAcces.GetAllAsync();
+        return await ClientAcces.GetAll();
     }
 
     public async Task<ClientModel?> GetByIdAsync(int id)
@@ -39,14 +39,14 @@ private void ValidateClient(ClientModel model)
         if (id < 0)
         return null;
 
-        return await ClientAcces.GetByIdAsync(id);
+        return await ClientAcces.GetById(id);
     }
 
     public async Task<ClientModel> CreateAsync(ClientModel model)
     {
         ValidateClient(model);
 
-        return await ClientAcces.CreateAsync(model);
+        return await ClientAcces.Create(model);
     }
 
     public async Task<bool> UpdateAsync(int id, ClientModel model)
@@ -56,7 +56,7 @@ private void ValidateClient(ClientModel model)
 
         ValidateClient(model);
 
-        return await ClientAcces.UpdateAsync(id,model);
+        return await ClientAcces.Update(id,model);
     }
 
     public async Task<bool> DeleteAsync(int id)
@@ -64,15 +64,17 @@ private void ValidateClient(ClientModel model)
         if (id < 0)
             return false;
 
-        return await ClientAcces.DeleteAsync(id);
+        return await ClientAcces.Delete(id);
     }
 
+
+
 //checkt niet of ID ongeldig is of dat er geen orders zijn
+// moet wegg naar order 
     public async Task<IEnumerable<OrderModel>> GetOrdersAsync(int id)
     {
         if (id < 0)
         return Enumerable.Empty<OrderModel>(); //geeft een lege lijst
 
-        return await ClientAcces.GetOrdersAsync(id);
-    }
+}
 }

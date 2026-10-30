@@ -31,7 +31,6 @@ public class OrderService : IOrderService
 
         return await OrderAcces.GetByIdAsync(id);
     }
-
     public async Task<OrderModel> CreateAsync(OrderModel model)
     {
         ValidateOrder(model);
@@ -57,7 +56,8 @@ public class OrderService : IOrderService
         return await OrderAcces.DeleteAsync(id);
     }
 
-    public async Task<IEnumerable<OrderItemModel>> GetItemsAsync(int id)
+    //checkt niet of ID ongeldig is of dat er geen orders zijn
+    public async Task<IEnumerable<OrderModel>> GetOrdersAsync(int id)
     {
         if (id < 0)
         return Enumerable.Empty<OrderItemModel>(); //geeft een lege lijst
