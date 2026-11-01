@@ -4,6 +4,27 @@ public static class SupplierAcces
 {
     private static string _Table = "Supplier";
 
+    // Temporary stubs for service testing; replace with database access later.
+    public static Task<IEnumerable<SupplierModel>> GetAllAsync() =>
+        Task.FromResult<IEnumerable<SupplierModel>>(Array.Empty<SupplierModel>());
+
+    public static Task<SupplierModel?> GetByIdAsync(int id) =>
+        Task.FromResult<SupplierModel?>(null);
+
+    public static Task<SupplierModel> CreateAsync(SupplierModel model) =>
+        Task.FromResult(model);
+
+    public static Task<bool> UpdateAsync(int id, SupplierModel model) =>
+        Task.FromResult(false);
+
+    public static Task<bool> DeleteAsync(int id) =>
+        Task.FromResult(false);
+
+    public static Task<IEnumerable<ItemModel>> GetItemsAsync(int id) =>
+        Task.FromResult<IEnumerable<ItemModel>>(Array.Empty<ItemModel>());
+
+    public static bool ValidateById(long id) => false;
+
     public static void CreateTable(string path)
     {
         string sql = $@"

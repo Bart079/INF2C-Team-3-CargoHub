@@ -94,18 +94,32 @@ public static class ClientAcces
 
         return await connection.QueryFirstOrDefaultAsync<ClientModel>(sql, new { id });
     }
-    public static async Task<ClientModel> Create(ClientModel model) // heeft het zin om model terug te geven?
+    public static async Task<ClientModel> Create(ClientModel model)
     {
         const string sql = @"
-            INSERT INTO Client (name, address, city, zip_code, province, country, contact_name, contact_phone, contact_email, created_at, updated_at)
-            VALUES (@Name, @Address, @City, @Zip_Code, @Province, @Country, @Contact_Name, @Contact_Phone, @Contact_Email, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+            INSERT INTO Client (
+                name, address, city, zip_code,
+                province, country, contact_name,
+                contact_phone, contact_email,
+                created_at, updated_at
+            )
+            VALUES (
+                @Name, @Address, @City, @Zip_Code,
+                @Province, @Country, @Contact_Name,
+                @Contact_Phone, @Contact_Email,
+                CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+            );
+
             SELECT last_insert_rowid();";
 
         using var connection = DatabaseConnection.CreateConnection();
         await connection.OpenAsync();
 
         var id = await connection.QuerySingleAsync<int>(sql, model);
-        return await GetById(id);
+
+        return await GetById(id)
+            ?? throw new InvalidOperationException(
+                "Created client could not be retrieved.");
     }
 
     public static async Task<bool> Update(int id, ClientModel model)

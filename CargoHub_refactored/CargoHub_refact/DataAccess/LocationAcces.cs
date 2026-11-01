@@ -4,6 +4,24 @@ public static class LocationAcces
 {
     private static string _Table = "Location";
 
+    // Temporary stubs for service testing; replace with database access later.
+    public static Task<IEnumerable<LocationModel>> GetAllAsync() =>
+        Task.FromResult<IEnumerable<LocationModel>>(Array.Empty<LocationModel>());
+
+    public static Task<LocationModel?> GetByIdAsync(int id) =>
+        Task.FromResult<LocationModel?>(null);
+
+    public static Task<LocationModel> CreateAsync(LocationModel model) =>
+        Task.FromResult(model);
+
+    public static Task<bool> UpdateAsync(int id, LocationModel model) =>
+        Task.FromResult(false);
+
+    public static Task<bool> DeleteAsync(int id) =>
+        Task.FromResult(false);
+
+    public static bool ValidatedById(int id) => false;
+
     public static void CreateTable(string path)
     {
         string sql = $@"

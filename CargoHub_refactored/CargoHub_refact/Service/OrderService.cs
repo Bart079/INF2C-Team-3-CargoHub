@@ -57,7 +57,7 @@ public class OrderService : IOrderService
     }
 
     //checkt niet of ID ongeldig is of dat er geen orders zijn
-    public async Task<IEnumerable<OrderModel>> GetOrdersAsync(int id)
+    public async Task<IEnumerable<OrderItemModel>> GetItemsAsync(int id)
     {
         if (id < 0)
         return Enumerable.Empty<OrderItemModel>(); //geeft een lege lijst

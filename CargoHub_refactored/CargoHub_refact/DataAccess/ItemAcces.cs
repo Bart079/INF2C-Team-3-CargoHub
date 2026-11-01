@@ -4,6 +4,24 @@ public static class ItemAcces
 {
     private static string _Table = "Item";
 
+    // Temporary stubs for service testing; replace with database access later.
+    public static Task<IEnumerable<ItemModel>> GetAllAsync() =>
+        Task.FromResult<IEnumerable<ItemModel>>(Array.Empty<ItemModel>());
+
+    public static Task<ItemModel?> GetByIdAsync(long id) =>
+        Task.FromResult<ItemModel?>(null);
+
+    public static Task<ItemModel> CreateAsync(ItemModel model) =>
+        Task.FromResult(model);
+
+    public static Task<bool> UpdateAsync(long id, ItemModel model) =>
+        Task.FromResult(false);
+
+    public static Task<bool> DeleteAsync(long id) =>
+        Task.FromResult(false);
+
+    public static bool ValidatedById(int id) => false;
+
     public static void CreateTable(string path)
     {
         string sql = $@"

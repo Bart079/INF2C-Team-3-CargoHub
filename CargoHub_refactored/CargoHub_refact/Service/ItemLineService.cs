@@ -9,6 +9,11 @@ public class ItemLineService : IItemLineService
         ArgumentException.ThrowIfNullOrWhiteSpace(model.Description);
     }
 
+    public async Task<IEnumerable<ItemLineModel>> GetAllAsync()
+    {
+        return await Item_lineAcces.GetAllAsync();
+    }
+
     public async Task<ItemLineModel?> GetByIdAsync(int id)
     {
         if (id < 0)

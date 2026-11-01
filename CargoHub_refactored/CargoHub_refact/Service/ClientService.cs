@@ -73,8 +73,9 @@ private void ValidateClient(ClientModel model)
 // moet wegg naar order 
     public async Task<IEnumerable<OrderModel>> GetOrdersAsync(int id)
     {
-        if (id < 0)
-        return Enumerable.Empty<OrderModel>(); //geeft een lege lijst
+        if (id <= 0)
+            return Enumerable.Empty<OrderModel>();
 
-}
+        return await OrderAcces.GetByClientId(id);
+    }
 }

@@ -23,6 +23,10 @@ public static class InventoryAcces
         return await connection.QuerySingleAsync<InventoryTotalsModel>(sql, new { itemId });
     }
 
+    // Temporary stub for service testing; replace with a database query later.
+    public static Task<IEnumerable<InventoryModel>> GetInventoryAsync(long itemId) =>
+        Task.FromResult<IEnumerable<InventoryModel>>(Array.Empty<InventoryModel>());
+
     public static void CreateTable(string path)
     {
         string sql = $@"

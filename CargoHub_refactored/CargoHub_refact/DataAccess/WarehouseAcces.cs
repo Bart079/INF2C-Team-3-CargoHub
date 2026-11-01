@@ -4,6 +4,25 @@ public static class WarehouseAcces
 {
     private static string _Table = "Warehouse";
 
+    // Temporary stubs for service testing; replace with database access later.
+    public static Task<IEnumerable<WarehouseModel>> GetAllAsync() =>
+        Task.FromResult<IEnumerable<WarehouseModel>>(Array.Empty<WarehouseModel>());
+
+    public static Task<WarehouseModel?> GetByIdAsync(int id) =>
+        Task.FromResult<WarehouseModel?>(null);
+
+    public static Task<WarehouseModel> CreateAsync(WarehouseModel model) =>
+        Task.FromResult(model);
+
+    public static Task<bool> UpdateAsync(int id, WarehouseModel model) =>
+        Task.FromResult(false);
+
+    public static Task<bool> DeleteAsync(int id) =>
+        Task.FromResult(false);
+
+    public static Task<IEnumerable<LocationModel>> GetLocationsAsync(int id) =>
+        Task.FromResult<IEnumerable<LocationModel>>(Array.Empty<LocationModel>());
+
     public static void CreateTable(string path)
     {
         string sql = $@"
