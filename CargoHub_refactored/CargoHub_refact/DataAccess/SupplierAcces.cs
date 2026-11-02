@@ -140,12 +140,12 @@ public static class SupplierAcces
             UPDATE Supplier
             SET code = @Code,
                 name = @Name,
-                address = @address,
+                address = @Address,
                 city = @City,
                 zip_code = @Zip_Code,
-                province = @Province
+                province = @Province,
                 country = @Country,
-                contact_name = @Country_Name,
+                contact_name = @Contact_Name,
                 phone_number = @Phone_Number,
                 reference = @Reference,
                 updated_at = CURRENT_TIMESTAMP
