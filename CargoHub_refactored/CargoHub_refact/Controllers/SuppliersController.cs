@@ -62,7 +62,7 @@ public class SuppliersController : ControllerBase
         if (parent == null)
             return NotFound();
 
-        var result = await _supplierService.GetItemsAsync(id);
+        var result = await _supplierService.GetSupplierItemsAsync(id);
         return Ok(result);
     }
 }

@@ -69,4 +69,36 @@ public static class ItemAcces
         DropTable(path);
         CreateTable(path);
     }
+
+    // supplier
+    public static async Task<IEnumerable<ItemModel>> GetSupplierItemsById(int id)
+    {
+        const string sql = @"
+            SELECT
+                item_id AS ID,
+                code AS Code,
+                description AS Description,
+                barcode AS Barcode,
+                model_number AS Model_Number,
+                commodity_code AS Commodity_Code,
+                unit_weight AS Unit_Weight,
+                item_line_id AS Item_Line_ID,
+                item_group_id AS Item_Group_ID,
+                item_type_id AS Item_Type_ID,
+                min_purchase_quantity AS Min_Purchase_Quantity,
+                case_size AS Case_Size,
+                packaging_type AS Packaging_Type,
+                order_multiple AS Order_Multiple,
+                supplier_id AS Supplier_ID,
+                supplier_sku AS Supplier_SKU,
+                created_at AS Created_At,
+                updated_at AS Updated_At
+            FROM Item
+            WHERE supplier_id = @id;";
+
+        using var connection = DatabaseConnection.CreateConnection();
+        await connection.OpenAsync();
+
+        return await connection.QueryAsync<ItemModel>(sql, new { id });
+    }
 }

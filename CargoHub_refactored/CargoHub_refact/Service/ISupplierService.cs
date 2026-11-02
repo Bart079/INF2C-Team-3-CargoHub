@@ -5,5 +5,5 @@ public interface ISupplierService
     Task<SupplierModel> CreateAsync(SupplierModel model);
     Task<bool> UpdateAsync(int id, SupplierModel model);
     Task<bool> DeleteAsync(int id);
-    Task<IEnumerable<ItemModel>> GetItemsAsync(int id);
+    Task<IEnumerable<ItemModel>> GetSupplierItemsAsync(int id);
 }

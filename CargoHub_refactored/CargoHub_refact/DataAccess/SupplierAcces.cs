@@ -4,25 +4,6 @@ public static class SupplierAcces
 {
     private static string _Table = "Supplier";
 
-    // Temporary stubs for service testing; replace with database access later.
-    public static Task<IEnumerable<SupplierModel>> GetAllAsync() =>
-        Task.FromResult<IEnumerable<SupplierModel>>(Array.Empty<SupplierModel>());
-
-    public static Task<SupplierModel?> GetByIdAsync(int id) =>
-        Task.FromResult<SupplierModel?>(null);
-
-    public static Task<SupplierModel> CreateAsync(SupplierModel model) =>
-        Task.FromResult(model);
-
-    public static Task<bool> UpdateAsync(int id, SupplierModel model) =>
-        Task.FromResult(false);
-
-    public static Task<bool> DeleteAsync(int id) =>
-        Task.FromResult(false);
-
-    public static Task<IEnumerable<ItemModel>> GetItemsAsync(int id) =>
-        Task.FromResult<IEnumerable<ItemModel>>(Array.Empty<ItemModel>());
-
     public static bool ValidateById(long id) => false;
 
     public static void CreateTable(string path)
@@ -66,5 +47,134 @@ public static class SupplierAcces
     {
         DropTable(path);
         CreateTable(path);
+    }
+
+
+
+    public static async Task<IEnumerable<SupplierModel>> GetAll()
+    {
+        const string sql = @"
+            SELECT
+                supplier_id AS ID,
+                code AS Code,
+                name AS Name,
+                address AS Address,
+                city AS City,
+                zip_code AS Zip_Code,
+                province AS Province,
+                country AS Country,
+                contact_name AS Contact_Name,
+                phone_number AS Phone_Number,
+                reference AS Reference,
+                created_at AS Created_At,
+                updated_at AS Updated_At
+            FROM Supplier;";
+
+        using var connection = DatabaseConnection.CreateConnection();
+        await connection.OpenAsync();
+
+        return await connection.QueryAsync<SupplierModel>(sql);
+    }
+
+    public static async Task<SupplierModel?> GetById(int id)
+    {
+        const string sql = @"
+            SELECT
+                supplier_id AS ID,
+                code AS Code,
+                name AS Name,
+                address AS Address,
+                city AS City,
+                zip_code AS Zip_Code,
+                province AS Province,
+                country AS Country,
+                contact_name AS Contact_Name,
+                phone_number AS Phone_Number,
+                reference AS Reference,
+                created_at AS Created_At,
+                updated_at AS Updated_At
+            FROM Supplier
+            WHERE supplier_id = @id;";
+
+        using var connection = DatabaseConnection.CreateConnection();
+        await connection.OpenAsync();
+
+        return await connection.QueryFirstOrDefaultAsync<SupplierModel>(
+            sql, new { id });
+    }
+
+
+    public static async Task<SupplierModel> Create(SupplierModel model)
+    {
+        const string sql = @"
+            INSERT INTO Supplier (
+            code, name, address, city, zip_code, 
+            province, country, contact_name, 
+            phone_number, reference, 
+            created_at, updated_at
+        )
+        VALUES (
+            @Code, @Name, @Address, @City, @Zip_Code,
+            @Province, @Country, @Contact_Name,
+            @Phone_Number, @Reference,
+            CURRENT_TIMESTAMP, CURRENT_TIMESTAMP        
+        );
+        
+        SELECT last_insert_rowid()";
+
+
+        using var connection = DatabaseConnection.CreateConnection();
+        await connection.OpenAsync();
+
+        var id = await connection.QuerySingleAsync<long>(sql, model);
+
+        return await GetById(checked((int)id))
+            ?? throw new InvalidOperationException(
+                "Created supplier could not be retrieved.");
+    }
+
+
+    public static async Task<bool> Update( int id, SupplierModel model)
+    {
+        const string sql = @"
+            UPDATE Supplier
+            SET code = @Code,
+                name = @Name,
+                address = @address,
+                city = @City,
+                zip_code = @Zip_Code,
+                province = @Province
+                country = @Country,
+                contact_name = @Country_Name,
+                phone_number = @Phone_Number,
+                reference = @Reference,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE supplier_id = @id;";
+
+
+        using var connection = DatabaseConnection.CreateConnection();
+        await connection.OpenAsync();
+
+        var parameters = new DynamicParameters(model);
+        parameters.Add("id", id);
+
+        var rowsAffected = await connection.ExecuteAsync(sql, parameters);
+        
+        return rowsAffected > 0;
+    }
+
+
+    public static async Task<bool> Delete(int id)
+    {
+        const string sql = @"
+            DELETE FROM Supplier
+            WHERE supplier_id = @id;";
+
+        using var connection = DatabaseConnection.CreateConnection();
+        await connection.OpenAsync();
+
+        var rowsAffected = await connection.ExecuteAsync(sql, new { id});
+
+        return rowsAffected > 0;
     }
 }

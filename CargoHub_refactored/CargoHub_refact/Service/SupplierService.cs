@@ -14,6 +14,7 @@ public class SupplierService : ISupplierService
         ArgumentException.ThrowIfNullOrWhiteSpace(model.Province);
         ArgumentException.ThrowIfNullOrWhiteSpace(model.Contact_Name);
         ArgumentException.ThrowIfNullOrWhiteSpace(model.Phone_Number);
+        ArgumentException.ThrowIfNullOrWhiteSpace(model.Code);
 
         if (!Regex.IsMatch(model.Phone_Number, @"^\+?[0-9 ]+$"))
             throw new ArgumentException("Phone number is invalid.");
@@ -25,27 +26,27 @@ public class SupplierService : ISupplierService
 
     public async Task<IEnumerable<SupplierModel>> GetAllAsync()
     {
-        return await SupplierAcces.GetAllAsync();
+        return await SupplierAcces.GetAll();
     }
 
     public async Task<SupplierModel?> GetByIdAsync(int id)
     {
-        if (id < 0)
+        if (id <= 0)
             return null;
 
-        return await SupplierAcces.GetByIdAsync(id);
+        return await SupplierAcces.GetById(id);
     }
 
     public async Task<SupplierModel> CreateAsync(SupplierModel model)
     {
         ValidateSupplier(model);
 
-        return await SupplierAcces.CreateAsync(model);
+        return await SupplierAcces.Create(model);
     }
 
     public async Task<bool> UpdateAsync(int id, SupplierModel model)
     {
-        if (id < 0)
+        if (id <= 0)
             return false;
 
         ValidateSupplier(model);
@@ -54,22 +55,22 @@ public class SupplierService : ISupplierService
             throw new ArgumentException(
                 "The ID must match the model ID.", nameof(id));
 
-        return await SupplierAcces.UpdateAsync(id, model);
+        return await SupplierAcces.Update(id, model);
     }
 
     public async Task<bool> DeleteAsync(int id)
     {
-        if (id < 0)
+        if (id <= 0)
             return false;
 
-        return await SupplierAcces.DeleteAsync(id);
+        return await SupplierAcces.Delete(id);
     }
 
-    public async Task<IEnumerable<ItemModel>> GetItemsAsync(int id)
+    public async Task<IEnumerable<ItemModel>> GetSupplierItemsAsync(int id)
     {
-        if (id < 0)
+        if (id <= 0)
             return Enumerable.Empty<ItemModel>();
 
-        return await SupplierAcces.GetItemsAsync(id);
+        return await ItemAcces.GetSupplierItemsById(id);
     }
 }
