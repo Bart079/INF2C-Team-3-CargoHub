@@ -106,22 +106,40 @@ public class ShipmentService : IShipmentService
         if (orderIds.Any(orderId => orderId <= 0))
             throw new ArgumentException("Order IDs must be greater than 0.", nameof(orderIds));
 
-        foreach (var orderId in orderIds)
+            var ids = orderIds.ToList();
+
+        if (ids.Count > 1)
+            throw new ArgumentException("Shipment can only have 1 order.", nameof(orderIds));
+
+        foreach (int orderID in ids)
         {
-            if (OrderAcces.ValidateById(orderId))
-                throw new ArgumentException($"Order ID {orderId} does not exist.", nameof(orderIds));
+        if (orderID <= 0)
+        throw new ArgumentException("Order id must be greater than 0.", nameof(orderIds));
+
+        if (OrderAcces.ValidateById(orderID))
+            throw new ArgumentException($"Order ID {orderID} does not exist.", nameof(orderIds));
         }
 
-        return await ShipmentAcces.UpdateOrdersAsync(id, orderIds);
+    return await ShipmentAcces.UpdateOrdersAsync(id, ids);
     }
 
     public async Task<bool> UpdateItemsAsync(int id,IEnumerable<ShipmentItemModel> items)
     {
         if (id < 0)
             return false;
-
+        
         ArgumentNullException.ThrowIfNull(items);
+        
+        var itemslist = items.ToList();
 
+        foreach (var item in itemslist)
+        {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(item.Item_ID);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(item.Amount);
+
+        if (ItemAcces.ValidateById(item.Item_ID))
+            throw new ArgumentException($"Item ID {item.Item_ID} does not exist.", nameof(items));
+        }
         return await ShipmentAcces.UpdateItemsAsync(id, items);
     }
 }
