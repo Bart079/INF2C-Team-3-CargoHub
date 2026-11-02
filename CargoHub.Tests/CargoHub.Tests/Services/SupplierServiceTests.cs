@@ -1,5 +1,3 @@
-using Xunit;
-
 public class SupplierServiceTests
 {
     private readonly SupplierService _service = new();

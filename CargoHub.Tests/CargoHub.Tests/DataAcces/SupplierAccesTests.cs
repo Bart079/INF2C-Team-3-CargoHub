@@ -1,8 +1,6 @@
 
 using Dapper;
-using Microsoft.Data.Sqlite;
 using Project.DataAccess;
-using Xunit;
 
 public class SupplierAccesTests : IDisposable
 {

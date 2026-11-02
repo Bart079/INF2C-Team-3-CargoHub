@@ -1,6 +1,4 @@
-
 using Microsoft.AspNetCore.Mvc;
-using Xunit;
 
 public class SupplierApiTests
 {
