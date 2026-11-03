@@ -36,7 +36,7 @@ private void ValidateClient(ClientModel model)
 
     public async Task<IEnumerable<ClientModel>> GetAllAsync()
     {
-        return await ClientAcces.GetAllAsync();
+        return await ClientAcces.GetAll();
     }
 
     public async Task<ClientModel?> GetByIdAsync(int id)
