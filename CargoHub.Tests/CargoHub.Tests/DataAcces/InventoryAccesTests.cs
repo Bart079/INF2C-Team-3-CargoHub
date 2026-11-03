@@ -1,6 +1,7 @@
 using System.Runtime.InteropServices;
 using Dapper;
 using Project.DataAccess;
+using Microsoft.Data.Sqlite;
 
 public class InventoryAccesTests : IDisposable
 {
@@ -60,20 +61,8 @@ public class InventoryAccesTests : IDisposable
                 Quantity_Allocated = 3
             };
         }
-    private void CreateTestInventory()
-    {
-        using var connection = DatabaseConnection.CreateConnection();
-        connection.Open();
-
-        connection.Execute(
-            "INSERT INTO Item (item_id) VALUES (1);");
-        
-        connection.Execute(
-            "INSERT INTO Location (location_id) VALUES (1);");
-    }
 
 //tests
-
 [Fact]
 public async Task GetAll_ReturnsInventory()
 {
@@ -87,14 +76,24 @@ public async Task GetAll_ReturnsInventory()
 }
 
 [Fact]
+public async Task GetAll_noinventory_retursEmptyCollection()
+{
+    //Act
+    var inventories = await InventoryAcces.GetAll();
+    //Assert
+    Assert.Empty(inventories); // controleert of er geen dingen terug komen
+}
+
+[Fact]
 public async Task GetById_ReturnsInventory()
     {
         var model = ValidInventory();
         var created = await InventoryAcces.Create(model);
         var inventory_by_id = await InventoryAcces.GetById(created.ID);
         Assert.NotNull(inventory_by_id);
-        Assert.Equal(created.ID, inventory_by_id.Item_ID);
+        Assert.Equal(created.ID, inventory_by_id.ID);
     }
+
 [Fact]
 public async Task GetById_UnknownInventory_ReturnsNull()
 {
@@ -119,16 +118,85 @@ public async Task Create_AddsInventory()
     }
 
 [Fact]
+public async Task Create_InvalidForeignKey_ThrowsException()
+    {
+        //Arrange
+        var model = ValidInventory();
+        model.Item_ID = 999999; //ongeldige foreign key
+        //Act + assert
+        var exception = await Assert.ThrowsAsync<SqliteException>(
+            () => InventoryAcces.Create(model));
+    }
+
+[Fact]
 public async Task Update_ChangesInventory()
     {
+        //Arrange
         var model = ValidInventory();
         var created = await InventoryAcces.Create(model);
-        Assert.NotNull(created);
-        Assert.True(created.ID > 0);
-        Assert.Equal(created.ID, created.Item_ID);
-        Assert.Equal(model.Location_ID, created.Location_ID);
+        model.Quantity_On_Hand = 30;
+        //Act
+        var updated = await InventoryAcces.Update(created.ID, model);
+        //Assert
+        Assert.True(updated);
         var stored = await InventoryAcces.GetById(created.ID);
+        Assert.NotNull(stored);
+        Assert.Equal(model.Quantity_On_Hand, stored.Quantity_On_Hand);
     }
+
+[Fact]
+public async Task UpdateInventory_returnsfalse()
+    {
+        //Arrange
+        var model = ValidInventory();
+        int unknownId = 999999;
+        //Act
+        var update = await InventoryAcces.Update(unknownId, model);
+        //Assert
+        Assert.False(update);
+    }
+
+[Fact]
+public async Task Delete_IDnotfound_returnsFalse()
+    {
+        //Arrange
+        int unknownId = 999999;
+        //Act
+        var delete = await InventoryAcces.Delete(unknownId);
+        //Assert
+        Assert.False(delete);
+    }
+
+[Fact]
+public async Task Delete_idfound_returnsTrue()
+    {
+        //Arrange
+        var model = ValidInventory();
+        var created = await InventoryAcces.Create(model);
+        int idfound = created.ID;
+        //Act
+        var delete = await InventoryAcces.Delete(idfound);
+        //Assert
+        Assert.True(delete);
+        var stored = await InventoryAcces.GetById(created.ID);
+        Assert.Null(stored);
+    }
+
+[Fact] //data integriteit testt
+public async Task ForeignKeys_AreEnabled()
+{
+    // Arrange maak verbinding met database, opent verbinding
+    using var connection = DatabaseConnection.CreateConnection(); //using zorgt voor dat verbinding na de test wordt opgeruimd
+    await connection.OpenAsync();
+
+    // Act
+    var foreignKeys = await connection.ExecuteScalarAsync<int>(
+        "PRAGMA foreign_keys;"
+    );
+
+    // Assert
+    Assert.Equal(1, foreignKeys);
+}
 
     public void Dispose() //database opruimen
     {
