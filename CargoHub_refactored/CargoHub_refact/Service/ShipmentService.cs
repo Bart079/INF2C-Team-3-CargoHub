@@ -1,13 +1,11 @@
-
 using Project.DataAccess;
-using System.Text.RegularExpressions;
 
 public class ShipmentService : IShipmentService
 {
     private void ValidateShipment(ShipmentModel model)
     {
         ArgumentNullException.ThrowIfNull(model);
-
+        ArgumentOutOfRangeException.ThrowIfNegative(model.ID);
         ArgumentException.ThrowIfNullOrWhiteSpace(model.Reference);
         ArgumentOutOfRangeException.ThrowIfNegative(model.Order_ID);
         ArgumentException.ThrowIfNullOrWhiteSpace(model.Shipment_Type);
@@ -16,25 +14,20 @@ public class ShipmentService : IShipmentService
         ArgumentException.ThrowIfNullOrWhiteSpace(model.Shipping_Method);
         ArgumentException.ThrowIfNullOrWhiteSpace(model.Payment_Type);
 
-        if (model.Shipment_Type != "Outgoing" && model.Shipment_Type != "Incoming")
-            throw new ArgumentException("Invalid shipment type.", nameof(model.Shipment_Type));
-
         if (model.Shipment_Status != "Transit" && model.Shipment_Status != "Scheduled")
+        {
             throw new ArgumentException("Invalid shipment status.", nameof(model.Shipment_Status));
+        }
 
         if (model.Shipping_Method != "Express" && model.Shipping_Method != "Standard")
+        {
             throw new ArgumentException("Invalid shipping method.", nameof(model.Shipping_Method));
+        }
 
         if (model.Payment_Type != "Automated" && model.Payment_Type != "Manual")
+        {
             throw new ArgumentException("Invalid payment type.", nameof(model.Payment_Type));
-
-        if (OrderAcces.ValidateById(model.Order_ID))
-            throw new ArgumentException("Order ID does not exist.", nameof(model.Order_ID));
-
-        if (!Regex.IsMatch(model.Reference, @"^SHP-\d{6}$"))
-            throw new ArgumentException(
-                "Reference must start with 'SHP-' followed by 6 digits.",
-                nameof(model.Reference));
+        }
     }
 
     public async Task<IEnumerable<ShipmentModel>> GetAllAsync()
@@ -101,16 +94,11 @@ public class ShipmentService : IShipmentService
         if (id < 0)
             return false;
 
-        ArgumentNullException.ThrowIfNull(orderIds);
+        if (orderIds == null)
+            throw new ArgumentNullException(nameof(orderIds));
 
-        if (orderIds.Any(orderId => orderId <= 0))
+        if (orderIds.Any(orderId => orderId < 0))
             throw new ArgumentException("Order IDs must be greater than 0.", nameof(orderIds));
-
-        foreach (var orderId in orderIds)
-        {
-            if (OrderAcces.ValidateById(orderId))
-                throw new ArgumentException($"Order ID {orderId} does not exist.", nameof(orderIds));
-        }
 
         return await ShipmentAcces.UpdateOrdersAsync(id, orderIds);
     }
@@ -120,7 +108,8 @@ public class ShipmentService : IShipmentService
         if (id < 0)
             return false;
 
-        ArgumentNullException.ThrowIfNull(items);
+        if (items == null)
+            throw new ArgumentNullException(nameof(items));
 
         return await ShipmentAcces.UpdateItemsAsync(id, items);
     }

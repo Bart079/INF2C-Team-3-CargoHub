@@ -7,12 +7,13 @@ public class ItemLineService : IItemLineService
         ArgumentNullException.ThrowIfNull(model);
         ArgumentException.ThrowIfNullOrWhiteSpace(model.Name);
         ArgumentException.ThrowIfNullOrWhiteSpace(model.Description);
-        
     }
+
     public async Task<IEnumerable<ItemLineModel>> GetAllAsync()
     {
         return await Item_lineAcces.GetAllAsync();
     }
+
     public async Task<ItemLineModel?> GetByIdAsync(int id)
     {
         if (id < 0)
@@ -31,12 +32,8 @@ public class ItemLineService : IItemLineService
     {
         if (id < 0)
         return false;
-        
+
         ValidateItemLine(model);
-
-        if (id != model.ID)
-            throw new ArgumentException("The ID must match the model ID.", nameof(id));
-
         return await Item_lineAcces.UpdateAsync(id,model);
     }
 
