@@ -58,7 +58,7 @@ public static class LocationAcces
         CreateTable(path);
     }
 
-    public static async Task<IEnumerable<LocationModel>> GetLocations(int id)
+    public static async Task<IEnumerable<LocationModel>> GetWarehousesLocations(int id)
     {
         const string sql = @"
             SELECT

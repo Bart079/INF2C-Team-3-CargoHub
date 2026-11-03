@@ -78,6 +78,6 @@ public class WarehouseService : IWarehouseService
         if (id <= 0)
         return Enumerable.Empty<LocationModel>(); //geeft een lege lijst
 
-        return await LocationAcces.GetLocations(id);
+        return await LocationAcces.GetWarehousesLocations(id);
     }
 }
