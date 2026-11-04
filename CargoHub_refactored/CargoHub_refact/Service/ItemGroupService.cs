@@ -7,11 +7,6 @@ public class ItemGroupService : IItemGroupService
         ArgumentNullException.ThrowIfNull(model);
         ArgumentException.ThrowIfNullOrWhiteSpace(model.Name);
 
-        if (Item_groupAcces.ValidateByName(model.Name))
-            throw new ArgumentException(
-                "Item group name already exists.",
-                nameof(model.Name));
-
     }
     public async Task<IEnumerable<ItemGroupModel>> GetAllAsync()
     {
@@ -38,10 +33,6 @@ public class ItemGroupService : IItemGroupService
         return false;
 
         ValidateItemGroup(model);
-
-        if (id != model.ID)
-            throw new ArgumentException("The ID must match the model ID.", nameof(id));
-            
         return await Item_groupAcces.UpdateAsync(id,model);
     }
 

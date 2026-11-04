@@ -21,17 +21,7 @@ public class SupplierService : ISupplierService
 
         var digits = Regex.Replace(model.Phone_Number, @"\D", "");
         if (digits.Length < 8)
-            throw new ArgumentException("Phone number is too short."); 
-
-        if (!Regex.IsMatch(model.Zip_Code, @"^[1-9][0-9]{3}\s?[A-Za-z]{2}$"))
-        {
-            throw new ArgumentException("Invalid zip code.", nameof(model.Zip_Code));
-        }
-        
-        if (!Regex.IsMatch(model.Code, @"^SUP-\d{4}$"))
-        {
-            throw new ArgumentException("Code must start with 'SUP-' followed by 4 digits.", nameof(model.Code));
-        }
+            throw new ArgumentException("Phone number is too short.");
     }
 
     public async Task<IEnumerable<SupplierModel>> GetAllAsync()
@@ -62,7 +52,8 @@ public class SupplierService : ISupplierService
         ValidateSupplier(model);
 
         if (id != model.ID)
-            throw new ArgumentException("The ID must match the model ID.", nameof(id));
+            throw new ArgumentException(
+                "The ID must match the model ID.", nameof(id));
 
         return await SupplierAcces.Update(id, model);
     }
