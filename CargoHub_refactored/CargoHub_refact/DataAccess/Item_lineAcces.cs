@@ -20,6 +20,9 @@ public static class Item_lineAcces
     public static Task<bool> DeleteAsync(int id) =>
         Task.FromResult(false);
 
+
+    public static bool ValidateByName(string name) => (false);
+
     public static Task<IEnumerable<ItemModel>> GetItemsAsync(int id) =>
         Task.FromResult<IEnumerable<ItemModel>>(Array.Empty<ItemModel>());
 
