@@ -20,8 +20,6 @@ public static class ItemAcces
     public static Task<bool> DeleteAsync(long id) =>
         Task.FromResult(false);
 
-    public static bool ValidatedById(int id) => false;
-
     public static void CreateTable(string path)
     {
         string sql = $@"
@@ -68,6 +66,35 @@ public static class ItemAcces
     {
         DropTable(path);
         CreateTable(path);
+    }
+
+    public static bool ValidatedById(int id)
+    {
+        const string sql = "SELECT EXISTS(SELECT 1 FROM Item WHERE item_id = @id);";
+
+        using var connection = DatabaseConnection.CreateConnection();
+        connection.Open();
+        return connection.QuerySingle<bool>(sql, new { id });
+    }
+
+    public static async Task<bool> AllExist(IEnumerable<int> ids)
+    {
+        ArgumentNullException.ThrowIfNull(ids);
+
+        var itemIds = ids.Distinct().ToArray();
+        if (itemIds.Length == 0)
+            return true;
+
+        const string sql = """
+            SELECT COUNT(*)
+            FROM Item
+            WHERE item_id IN @itemIds;
+            """;
+
+        using var connection = DatabaseConnection.CreateConnection();
+        await connection.OpenAsync();
+        var foundCount = await connection.QuerySingleAsync<int>(sql, new { itemIds });
+        return foundCount == itemIds.Length;
     }
 
     // supplier

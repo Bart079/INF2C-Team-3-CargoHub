@@ -2,6 +2,7 @@ import json
 
 from models.base import Base
 
+
 class ShipmentItems(Base):
     def __init__(self, root_path, is_debug=False):
         self.data_path = root_path + "shipment_item.json"

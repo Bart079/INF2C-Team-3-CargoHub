@@ -96,4 +96,14 @@ public static class OrderAcces
         return await connection.QueryAsync<OrderModel>(
             sql, new { clientId });
     }
+
+    public static async Task<bool> ValidateId(int id)
+    {
+        const string sql = "SELECT EXISTS(SELECT 1 FROM \"Order\" WHERE order_id = @id) AS IsValid";
+
+        using var connection = DatabaseConnection.CreateConnection();
+        await connection.OpenAsync();
+
+        return await connection.QueryFirstOrDefaultAsync<bool>(sql, new { id });
+    }
 }
