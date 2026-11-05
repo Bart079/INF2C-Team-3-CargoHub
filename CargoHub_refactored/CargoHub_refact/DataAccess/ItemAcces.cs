@@ -4,6 +4,22 @@ public static class ItemAcces
 {
     private static string _Table = "Item";
 
+    // Temporary stubs for service testing; replace with database access later.
+    public static Task<IEnumerable<ItemModel>> GetAllAsync() =>
+        Task.FromResult<IEnumerable<ItemModel>>(Array.Empty<ItemModel>());
+
+    public static Task<ItemModel?> GetByIdAsync(long id) =>
+        Task.FromResult<ItemModel?>(null);
+
+    public static Task<ItemModel> CreateAsync(ItemModel model) =>
+        Task.FromResult(model);
+
+    public static Task<bool> UpdateAsync(long id, ItemModel model) =>
+        Task.FromResult(false);
+
+    public static Task<bool> DeleteAsync(long id) =>
+        Task.FromResult(false);
+
     public static void CreateTable(string path)
     {
         string sql = $@"
@@ -50,5 +66,66 @@ public static class ItemAcces
     {
         DropTable(path);
         CreateTable(path);
+    }
+
+    public static bool ValidatedById(int id)
+    {
+        const string sql = "SELECT EXISTS(SELECT 1 FROM Item WHERE item_id = @id);";
+
+        using var connection = DatabaseConnection.CreateConnection();
+        connection.Open();
+        return connection.QuerySingle<bool>(sql, new { id });
+    }
+
+    public static async Task<bool> AllExist(IEnumerable<int> ids)
+    {
+        ArgumentNullException.ThrowIfNull(ids);
+
+        var itemIds = ids.Distinct().ToArray();
+        if (itemIds.Length == 0)
+            return true;
+
+        const string sql = """
+            SELECT COUNT(*)
+            FROM Item
+            WHERE item_id IN @itemIds;
+            """;
+
+        using var connection = DatabaseConnection.CreateConnection();
+        await connection.OpenAsync();
+        var foundCount = await connection.QuerySingleAsync<int>(sql, new { itemIds });
+        return foundCount == itemIds.Length;
+    }
+
+    // supplier
+    public static async Task<IEnumerable<ItemModel>> GetSupplierItemsById(int id)
+    {
+        const string sql = @"
+            SELECT
+                item_id AS ID,
+                code AS Code,
+                description AS Description,
+                barcode AS Barcode,
+                model_number AS Model_Number,
+                commodity_code AS Commodity_Code,
+                unit_weight AS Unit_Weight,
+                item_line_id AS Item_Line_ID,
+                item_group_id AS Item_Group_ID,
+                item_type_id AS Item_Type_ID,
+                min_purchase_quantity AS Min_Purchase_Quantity,
+                case_size AS Case_Size,
+                packaging_type AS Packaging_Type,
+                order_multiple AS Order_Multiple,
+                supplier_id AS Supplier_ID,
+                supplier_sku AS Supplier_SKU,
+                created_at AS Created_At,
+                updated_at AS Updated_At
+            FROM Item
+            WHERE supplier_id = @id;";
+
+        using var connection = DatabaseConnection.CreateConnection();
+        await connection.OpenAsync();
+
+        return await connection.QueryAsync<ItemModel>(sql, new { id });
     }
 }

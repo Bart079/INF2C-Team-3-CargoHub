@@ -11,8 +11,8 @@ private void ValidateClient(ClientModel model)
         ArgumentException.ThrowIfNullOrWhiteSpace(model.Address);
         ArgumentException.ThrowIfNullOrWhiteSpace(model.City);
         ArgumentException.ThrowIfNullOrWhiteSpace(model.Zip_Code);
-        ArgumentException.ThrowIfNullOrWhiteSpace(model.Province);
         ArgumentException.ThrowIfNullOrWhiteSpace(model.Country);
+        ArgumentException.ThrowIfNullOrWhiteSpace(model.Province);
         ArgumentException.ThrowIfNullOrWhiteSpace(model.Contact_Name);
         ArgumentException.ThrowIfNullOrWhiteSpace(model.Contact_Email);
 
@@ -27,16 +27,11 @@ private void ValidateClient(ClientModel model)
         var digits = Regex.Replace(model.Contact_Phone, @"\D", "");
         if (digits.Length < 8)
             throw new ArgumentException("Phone number is too short.");
-
-        if (!Regex.IsMatch(model.Zip_Code, @"^[1-9][0-9]{3}\s?[A-Za-z]{2}$"))
-        {
-            throw new ArgumentException("Invalid zip code.", nameof(model.Zip_Code));
-        }
 }
 
     public async Task<IEnumerable<ClientModel>> GetAllAsync()
     {
-        return await ClientAcces.GetAllAsync();
+        return await ClientAcces.GetAll();
     }
 
     public async Task<ClientModel?> GetByIdAsync(int id)
@@ -44,14 +39,14 @@ private void ValidateClient(ClientModel model)
         if (id < 0)
         return null;
 
-        return await ClientAcces.GetByIdAsync(id);
+        return await ClientAcces.GetById(id);
     }
 
     public async Task<ClientModel> CreateAsync(ClientModel model)
     {
         ValidateClient(model);
 
-        return await ClientAcces.CreateAsync(model);
+        return await ClientAcces.Create(model);
     }
 
     public async Task<bool> UpdateAsync(int id, ClientModel model)
@@ -59,12 +54,9 @@ private void ValidateClient(ClientModel model)
         if (id < 0)
         return false;
 
-        if (id != model.ID)
-            throw new ArgumentException("The ID must match the model ID.", nameof(id));
-
         ValidateClient(model);
 
-        return await ClientAcces.UpdateAsync(id,model);
+        return await ClientAcces.Update(id,model);
     }
 
     public async Task<bool> DeleteAsync(int id)
@@ -72,15 +64,18 @@ private void ValidateClient(ClientModel model)
         if (id < 0)
             return false;
 
-        return await ClientAcces.DeleteAsync(id);
+        return await ClientAcces.Delete(id);
     }
 
+
+
 //checkt niet of ID ongeldig is of dat er geen orders zijn
+// moet wegg naar order 
     public async Task<IEnumerable<OrderModel>> GetOrdersAsync(int id)
     {
-        if (id < 0)
-        return Enumerable.Empty<OrderModel>(); //geeft een lege lijst
+        if (id <= 0)
+            return Enumerable.Empty<OrderModel>();
 
-        return await ClientAcces.GetOrdersAsync(id);
+        return await OrderAcces.GetByClientId(id);
     }
 }

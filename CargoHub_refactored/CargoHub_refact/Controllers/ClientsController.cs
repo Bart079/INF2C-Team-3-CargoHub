@@ -1,5 +1,7 @@
 
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.Sqlite;
+
 
 [ApiController]
 [Route("api/v1/clients")]
@@ -47,23 +49,35 @@ public class ClientsController : ControllerBase
     [HttpGet("{id:int}/orders")]
     public async Task<IActionResult> GetOrders(int id)
     {
+        var client = await _clientService.GetByIdAsync(id);
+
+        if (client == null)
+            return NotFound();
+
         var orders = await _clientService.GetOrdersAsync(id);
+
         return Ok(orders);
     }
 
     // POST: api/v1/clients
     // Nieuwe client toevoegen
     [HttpPost]
-    public async Task<IActionResult> Create(
-        [FromBody] ClientModel client)
+    public async Task<IActionResult> Create([FromBody] ClientModel client)
     {
-        var createdClient = await _clientService.CreateAsync(client);
+        try
+        {
+            var createdClient = await _clientService.CreateAsync(client);
 
-        return CreatedAtAction(
-            nameof(GetById),
-            new { id = createdClient.ID },
-            createdClient
-        );
+            return CreatedAtAction(
+                nameof(GetById),
+                new { id = createdClient.ID },
+                createdClient
+            );
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
     }
 
     // PUT: api/v1/clients/1
@@ -86,11 +100,23 @@ public class ClientsController : ControllerBase
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id)
     {
-        var deleted = await _clientService.DeleteAsync(id);
+        try
+        {
+            var deleted = await _clientService.DeleteAsync(id);
 
-        if (!deleted)
-            return NotFound();
+            if (!deleted)
+                return NotFound();
 
-        return Ok();
+            return Ok();
+        }
+        catch (SqliteException ex)
+            when (ex.SqliteErrorCode == 19 &&
+                ex.SqliteExtendedErrorCode == 787)
+        {
+            return Conflict(new
+            {
+                error = "Client cannot be deleted because it is still in use."
+            });
+        }
     }
 }
