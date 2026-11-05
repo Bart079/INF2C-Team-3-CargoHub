@@ -5,6 +5,7 @@ from providers import data_provider
 
 SHIPMENTS = []
 
+
 class Shipments(Base):
     def __init__(self, root_path, is_debug=False):
         self.data_path = root_path + "shipment.json"

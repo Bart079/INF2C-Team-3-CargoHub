@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.Sqlite;
 
 [ApiController]
 [Route("api/v1/shipments")]
@@ -48,11 +49,23 @@ public class ShipmentsController : ControllerBase
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id)
     {
-        var deleted = await _shipmentService.DeleteAsync(id);
-        if (!deleted)
-            return NotFound();
+        try
+        {
+            var deleted = await _shipmentService.DeleteAsync(id);
+            if (!deleted)
+                return NotFound();
 
-        return NoContent();
+            return NoContent();
+        }
+        catch (SqliteException ex)
+            when (ex.SqliteErrorCode == 19 &&
+                ex.SqliteExtendedErrorCode == 787)
+        {
+            return Conflict(new
+            {
+                error = "Shipment cannot be deleted because it is still in use."
+            });
+        }
     }
 
     [HttpGet("{id:int}/orders")]

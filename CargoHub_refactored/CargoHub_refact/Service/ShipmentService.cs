@@ -32,7 +32,7 @@ public class ShipmentService : IShipmentService
 
     public async Task<IEnumerable<ShipmentModel>> GetAllAsync()
     {
-        return await ShipmentAcces.GetAllAsync();
+        return await ShipmentAcces.GetAll();
     }
 
     public async Task<ShipmentModel?> GetByIdAsync(int id)
@@ -40,14 +40,14 @@ public class ShipmentService : IShipmentService
         if (id < 0)
             return null;
 
-        return await ShipmentAcces.GetByIdAsync(id);
+        return await ShipmentAcces.GetById(id);
     }
 
     public async Task<ShipmentModel> CreateAsync(ShipmentModel model)
     {
         ValidateShipment(model);
 
-        return await ShipmentAcces.CreateAsync(model);
+        return await ShipmentAcces.Create(model);
     }
 
     public async Task<bool> UpdateAsync(int id, ShipmentModel model)
@@ -60,7 +60,7 @@ public class ShipmentService : IShipmentService
         if (id != model.ID)
             throw new ArgumentException("The ID must match the model ID.", nameof(id));
 
-        return await ShipmentAcces.UpdateAsync(id, model);
+        return await ShipmentAcces.Update(id, model);
     }
 
     public async Task<bool> DeleteAsync(int id)
@@ -68,7 +68,7 @@ public class ShipmentService : IShipmentService
         if (id < 0)
             return false;
 
-        return await ShipmentAcces.DeleteAsync(id);
+        return await ShipmentAcces.Delete(id);
     }
 
     // Haalt de order-ID's van een shipment op
@@ -77,7 +77,7 @@ public class ShipmentService : IShipmentService
         if (id < 0)
             return Enumerable.Empty<int>();
 
-        return await ShipmentAcces.GetOrdersAsync(id);
+        return await ShipmentAcces.GetOrders(id);
     }
 
     // Haalt de items van een shipment op
@@ -86,7 +86,7 @@ public class ShipmentService : IShipmentService
         if (id < 0)
             return Enumerable.Empty<ShipmentItemModel>();
 
-        return await ShipmentAcces.GetItemsAsync(id);
+        return await Shipment_itemAcces.GetItemsByShipmentId(id);
     }
 
     public async Task<bool> UpdateOrdersAsync(int id, IEnumerable<int> orderIds)
@@ -94,23 +94,93 @@ public class ShipmentService : IShipmentService
         if (id < 0)
             return false;
 
-        if (orderIds == null)
-            throw new ArgumentNullException(nameof(orderIds));
+        ArgumentNullException.ThrowIfNull(orderIds);
 
-        if (orderIds.Any(orderId => orderId < 0))
+        if (orderIds.Any(orderId => orderId <= 0))
             throw new ArgumentException("Order IDs must be greater than 0.", nameof(orderIds));
 
-        return await ShipmentAcces.UpdateOrdersAsync(id, orderIds);
+            var ids = orderIds.ToList();
+
+        if (ids.Count > 1)
+            throw new ArgumentException("Shipment can only have 1 order.", nameof(orderIds));
+
+        foreach (int orderID in ids)
+        {
+            if (orderID <= 0)
+                throw new ArgumentException("Order id must be greater than 0.", nameof(orderIds));
+
+            if (!await OrderAcces.ValidateId(orderID))
+                throw new ArgumentException($"Order ID {orderID} does not exist.", nameof(orderIds));
+        }
+
+    return await ShipmentAcces.UpdateOrders(id, ids);
     }
 
-    public async Task<bool> UpdateItemsAsync(int id,IEnumerable<ShipmentItemModel> items)
+    public async Task<bool> UpdateItemsAsync(
+        int id,
+        IEnumerable<ShipmentItemModel> items)
     {
-        if (id < 0)
+        if (id <= 0)
             return false;
 
-        if (items == null)
-            throw new ArgumentNullException(nameof(items));
+        ArgumentNullException.ThrowIfNull(items);
 
-        return await ShipmentAcces.UpdateItemsAsync(id, items);
+        var itemsList = items.ToList();
+        foreach (var item in itemsList)
+        {
+            ArgumentNullException.ThrowIfNull(item);
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(item.Item_ID);
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(item.Amount);
+        }
+
+        var newAmounts = itemsList
+            .GroupBy(item => item.Item_ID)
+            .ToDictionary(group => group.Key, group => group.Last().Amount);
+
+        if (!await ItemAcces.AllExist(newAmounts.Keys))
+            throw new ArgumentException("One or more item IDs do not exist.", nameof(items));
+
+        if (await ShipmentAcces.GetById(id) is null)
+            return false;
+
+        var currentItems = await Shipment_itemAcces.GetItemsByShipmentId(id);
+        var currentAmounts = currentItems
+            .GroupBy(item => item.Item_ID)
+            .ToDictionary(group => group.Key, group => group.Sum(item => item.Amount));
+        var deltas = currentAmounts.Keys
+            .Union(newAmounts.Keys)
+            .Select(itemId => new
+            {
+                ItemId = itemId,
+                Delta = newAmounts.GetValueOrDefault(itemId)
+                    - currentAmounts.GetValueOrDefault(itemId)
+            })
+            .Where(item => item.Delta != 0)
+            .ToDictionary(item => item.ItemId, item => item.Delta);
+
+        var inventories = await InventoryAcces.GetByItemIds(deltas.Keys);
+        var inventoriesToUpdate = inventories
+            .GroupBy(inventory => inventory.Item_ID)
+            .Select(group => group.OrderByDescending(
+                inventory => inventory.Quantity_On_Hand).First())
+            .Where(inventory => deltas.ContainsKey(inventory.Item_ID))
+            .ToList();
+
+        foreach (var inventory in inventoriesToUpdate)
+        {
+            inventory.Quantity_Ordered = Math.Max(
+                0,
+                inventory.Quantity_Ordered + deltas[inventory.Item_ID]);
+        }
+
+        if (!await InventoryAcces.UpdateOrderedQuantities(inventoriesToUpdate))
+            throw new InvalidOperationException("One or more inventory rows could not be updated.");
+
+        await Shipment_itemAcces.ReplaceItemsForShipment(
+            id,
+            newAmounts.Select(item => new ShipmentItemModel(
+                0, id, item.Key, item.Value)));
+
+        return true;
     }
 }
