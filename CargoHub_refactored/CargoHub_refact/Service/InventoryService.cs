@@ -10,10 +10,10 @@ public class InventoryService : IInventoryService
     ArgumentOutOfRangeException.ThrowIfNegative(model.Quantity_Ordered);
     ArgumentOutOfRangeException.ThrowIfNegative(model.Quantity_Allocated);
 
-    if (ItemAcces.ValidatedById(model.Item_ID))
+    if (!ItemAcces.ValidatedById(model.Item_ID))
         throw new ArgumentException("Item ID is not valid / existing.", nameof(model.Item_ID));
 
-    if (LocationAcces.ValidatedById(model.Location_ID))
+    if (!LocationAcces.ValidatedById(model.Location_ID))
         throw new ArgumentException("Location ID is not valid / existing.", nameof(model.Location_ID));
 }
     public async Task<IEnumerable<InventoryModel>> GetAllAsync()
