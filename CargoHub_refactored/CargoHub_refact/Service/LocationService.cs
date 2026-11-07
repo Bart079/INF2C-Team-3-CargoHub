@@ -4,16 +4,11 @@ public class LocationService : ILocationService
 {
     private void ValidateLocation(LocationModel model)
     {
-        ArgumentNullException.ThrowIfNull(model);
-
-        ArgumentOutOfRangeException.ThrowIfNegative(model.Warehouse_ID);
-        ArgumentException.ThrowIfNullOrWhiteSpace(model.Code);
-        ArgumentException.ThrowIfNullOrWhiteSpace(model.Name);
-
-        if (WarehouseAcces.ValidateById(model.Warehouse_ID))
-            throw new ArgumentException(
-                "Warehouse ID is not valid / existing.",
-                nameof(model.Warehouse_ID));
+            ArgumentNullException.ThrowIfNull(model);
+            ArgumentOutOfRangeException.ThrowIfNegative(model.ID);
+            ArgumentOutOfRangeException.ThrowIfNegative(model.Warehouse_ID);
+            ArgumentException.ThrowIfNullOrWhiteSpace(model.Code);
+            ArgumentException.ThrowIfNullOrWhiteSpace(model.Name);
     }
     public async Task<IEnumerable<LocationModel>> GetAllAsync()
     {
@@ -41,9 +36,6 @@ public class LocationService : ILocationService
         return false;
 
         ValidateLocation(model);
-
-        if (id != model.ID)
-            throw new ArgumentException("The ID must match the model ID.", nameof(id));
 
         return await LocationAcces.UpdateAsync(id,model);
     }

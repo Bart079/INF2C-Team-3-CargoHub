@@ -4,6 +4,28 @@ public static class TransferAcces
 {
     private static string _Table = "Transfer";
 
+    // Temporary stubs for service testing; replace with database access later.
+    public static Task<IEnumerable<TransferModel>> GetAllAsync() =>
+        Task.FromResult<IEnumerable<TransferModel>>(Array.Empty<TransferModel>());
+
+    public static Task<TransferModel?> GetByIdAsync(int id) =>
+        Task.FromResult<TransferModel?>(null);
+
+    public static Task<TransferModel> CreateAsync(TransferModel model) =>
+        Task.FromResult(model);
+
+    public static Task<bool> UpdateAsync(int id, TransferModel model) =>
+        Task.FromResult(false);
+
+    public static Task<bool> DeleteAsync(int id) =>
+        Task.FromResult(false);
+
+    public static Task<IEnumerable<TransferItemModel>> GetItemsAsync(int id) =>
+        Task.FromResult<IEnumerable<TransferItemModel>>(Array.Empty<TransferItemModel>());
+
+    public static Task<bool> CommitAsync(int id) =>
+        Task.FromResult(false);
+
     public static void CreateTable(string path)
     {
         string sql = $@"

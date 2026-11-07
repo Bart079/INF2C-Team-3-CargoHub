@@ -10,15 +10,21 @@ public static class DatabaseConnection
         "cargohub.db"
     );
 
-    public static SqliteConnection CreateConnection(
-        string? path = null)
+    public static SqliteConnection CreateConnection(string? path = null)
     {
+        var testPath = Environment.GetEnvironmentVariable(
+            "CARGOHUB_TEST_DB");
+
         var connectionString = new SqliteConnectionStringBuilder
         {
-            DataSource = path ?? _dbPath,
-            ForeignKeys = true
+            DataSource = path ?? testPath ?? _dbPath,
+            Mode = SqliteOpenMode.ReadWrite,
+            ForeignKeys = true,
+            Pooling = testPath == null
         }.ToString();
 
         return new SqliteConnection(connectionString);
     }
+
+    
 }
