@@ -1,4 +1,5 @@
 using Project.DataAccess;
+using System.Data;
 
 public class TransferService : ITransferService
 {
@@ -89,24 +90,52 @@ public class TransferService : ITransferService
         await connection.OpenAsync();
         using var transaction = connection.BeginTransaction();
 
+        if (!await ProcessTransfer(id, connection, transaction))
+            return false;
+
+        await transaction.CommitAsync();
+        return true;
+    }
+
+    private static async Task<bool> ProcessTransfer(
+        int id,
+        IDbConnection connection,
+        IDbTransaction transaction)
+    {
         if (!await TransferAcces.TryMarkProcessed(id, connection, transaction))
             return false;
 
         var transfer = await TransferAcces.GetById(id, connection, transaction);
         if (transfer == null
             || transfer.From_Location_ID == transfer.To_Location_ID)
-        {
             return false;
+
+        var quantities = await GetTransferQuantities(id, connection, transaction);
+        if (quantities == null)
+            return false;
+
+        foreach (var item in quantities)
+        {
+            if (!await MoveItem(item, transfer, connection, transaction))
+                return false;
         }
 
+        return true;
+    }
+
+    private static async Task<IReadOnlyList<TransferQuantity>?> GetTransferQuantities(
+        int id,
+        IDbConnection connection,
+        IDbTransaction transaction)
+    {
         var items = (await Transfer_itemAcces.GetItems(
             id, connection, transaction)).ToList();
 
-        if (items.Count == 0
-            || items.Any(item => item.Amount <= 0
+        if (items.Count == 0 || items.Any(item =>
+                item.Amount <= 0
                 || item.Amount != decimal.Truncate(item.Amount)))
         {
-            return false;
+            return null;
         }
 
         var quantitiesByItem = items
@@ -119,67 +148,99 @@ public class TransferService : ITransferService
             .ToList();
 
         if (quantitiesByItem.Any(item => item.Amount > int.MaxValue))
+            return null;
+
+        return quantitiesByItem
+            .Select(item => new TransferQuantity(item.Item_ID, (int)item.Amount))
+            .ToList();
+    }
+
+    private static async Task<bool> MoveItem(
+        TransferQuantity item,
+        TransferModel transfer,
+        IDbConnection connection,
+        IDbTransaction transaction)
+    {
+        var source = (await InventoryAcces.GetByItemAndLocation(
+            item.ItemId, transfer.From_Location_ID, connection, transaction))
+            .ToList();
+
+        if (!HasSufficientQuantity(source, item.Amount))
             return false;
 
-        foreach (var item in quantitiesByItem)
+        if (!await WithdrawFromSource(
+                source, item.Amount, connection, transaction))
         {
-            var amount = (int)item.Amount;
-            var source = (await InventoryAcces.GetByItemAndLocation(
-                item.Item_ID, transfer.From_Location_ID, connection, transaction))
-                .ToList();
+            return false;
+        }
 
-            if (source.Any(inventory => inventory.Quantity_On_Hand < 0)
-                || source.Sum(inventory => (long)inventory.Quantity_On_Hand) < amount)
+        return await DepositAtDestination(
+            item, transfer.To_Location_ID, connection, transaction);
+    }
+
+    private static bool HasSufficientQuantity(
+        IReadOnlyCollection<InventoryModel> source,
+        int amount) =>
+        !source.Any(inventory => inventory.Quantity_On_Hand < 0)
+        && source.Sum(inventory => (long)inventory.Quantity_On_Hand) >= amount;
+
+    private static async Task<bool> WithdrawFromSource(
+        IEnumerable<InventoryModel> source,
+        int amount,
+        IDbConnection connection,
+        IDbTransaction transaction)
+    {
+        var remaining = amount;
+        foreach (var inventory in source)
+        {
+            var moved = Math.Min(remaining, inventory.Quantity_On_Hand);
+            if (moved == 0)
+                continue;
+
+            if (!await InventoryAcces.UpdateQuantityOnHand(
+                    inventory.ID,
+                    inventory.Quantity_On_Hand - moved,
+                    connection,
+                    transaction))
             {
                 return false;
             }
 
-            var remaining = amount;
-            foreach (var inventory in source)
-            {
-                var moved = Math.Min(remaining, inventory.Quantity_On_Hand);
-                if (moved == 0)
-                    continue;
-
-                if (!await InventoryAcces.UpdateQuantityOnHand(
-                        inventory.ID,
-                        inventory.Quantity_On_Hand - moved,
-                        connection,
-                        transaction))
-                {
-                    return false;
-                }
-
-                remaining -= moved;
-                if (remaining == 0)
-                    break;
-            }
-
-            var destination = (await InventoryAcces.GetByItemAndLocation(
-                item.Item_ID, transfer.To_Location_ID, connection, transaction))
-                .FirstOrDefault();
-
-            if (destination == null)
-            {
-                await InventoryAcces.CreateAtLocation(
-                    item.Item_ID, transfer.To_Location_ID, amount,
-                    connection, transaction);
-            }
-            else
-            {
-                if (destination.Quantity_On_Hand > int.MaxValue - amount
-                    || !await InventoryAcces.UpdateQuantityOnHand(
-                        destination.ID,
-                        destination.Quantity_On_Hand + amount,
-                        connection,
-                        transaction))
-                {
-                    return false;
-                }
-            }
+            remaining -= moved;
+            if (remaining == 0)
+                break;
         }
 
-        await transaction.CommitAsync();
-        return true;
+        return remaining == 0;
     }
+
+    private static async Task<bool> DepositAtDestination(
+        TransferQuantity item,
+        int destinationLocationId,
+        IDbConnection connection,
+        IDbTransaction transaction)
+    {
+        var destination = (await InventoryAcces.GetByItemAndLocation(
+            item.ItemId, destinationLocationId, connection, transaction))
+            .FirstOrDefault();
+
+        if (destination == null)
+        {
+            await InventoryAcces.CreateAtLocation(
+                item.ItemId, destinationLocationId, item.Amount,
+                connection, transaction);
+            return true;
+        }
+
+        if (destination.Quantity_On_Hand > int.MaxValue - item.Amount)
+            return false;
+
+        return await InventoryAcces.UpdateQuantityOnHand(
+            destination.ID,
+            destination.Quantity_On_Hand + item.Amount,
+            connection,
+            transaction);
+    }
+
+    private sealed record TransferQuantity(int ItemId, int Amount);
 }

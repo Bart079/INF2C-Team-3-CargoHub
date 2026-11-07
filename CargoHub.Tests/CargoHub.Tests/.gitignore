@@ -16,3 +16,13 @@
 .DS_Store
 Thumbs.db
 Desktop.ini
+# Test results
+**/TestResults/
+
+# Coverage reports
+**/CoverageReport/
+**/coverage.cobertura.xml
+
+# ReportGenerator output
+**/index.html
+**/*.svg
