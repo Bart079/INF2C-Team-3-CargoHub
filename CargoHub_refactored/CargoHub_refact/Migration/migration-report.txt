@@ -1,34 +1,34 @@
 === CargoHub migratierapport ===
-Datum: 2026-11-05 21:17:02
+Datum: 2026-11-05 22:03:40
 
 Per entiteit
 | Entiteit | Records | Imports | Succes | Status |
 | --- | ---: | ---: | ---: | --- |
-| Client | 300 | 300 | 100,00% | Voltooid |
-| Supplier | 21 | 21 | 100,00% | Voltooid |
-| Warehouse | 10 | 10 | 100,00% | Voltooid |
-| Location | 400 | 400 | 100,00% | Voltooid |
-| Item_group | 3 | 3 | 100,00% | Voltooid |
-| Item_line | 14 | 14 | 100,00% | Voltooid |
-| Item_type | 3 | 3 | 100,00% | Voltooid |
-| User | 6 | 6 | 100,00% | Voltooid |
-| Item | 600 | 600 | 100,00% | Voltooid |
-| Inventory | 4800 | 4800 | 100,00% | Voltooid |
-| Order | 4854 | 4854 | 100,00% | Voltooid |
-| Order_item | 26498 | 26498 | 100,00% | Voltooid |
-| Transfer | 800 | 800 | 100,00% | Voltooid |
-| Transfer_item | 2370 | 2370 | 100,00% | Voltooid |
-| Shipment | 6132 | 6132 | 100,00% | Voltooid |
-| Shipment_item | 33660 | 33660 | 100,00% | Voltooid |
+| Client | - | - | - | Bestand ontbreekt |
+| Supplier | - | - | - | Bestand ontbreekt |
+| Warehouse | - | - | - | Bestand ontbreekt |
+| Location | - | - | - | Bestand ontbreekt |
+| Item_group | - | - | - | Bestand ontbreekt |
+| Item_line | - | - | - | Bestand ontbreekt |
+| Item_type | - | - | - | Bestand ontbreekt |
+| User | - | - | - | Bestand ontbreekt |
+| Item | - | - | - | Bestand ontbreekt |
+| Inventory | - | - | - | Bestand ontbreekt |
+| Order | - | - | - | Bestand ontbreekt |
+| Order_item | - | - | - | Bestand ontbreekt |
+| Transfer | - | - | - | Bestand ontbreekt |
+| Transfer_item | - | - | - | Bestand ontbreekt |
+| Shipment | - | - | - | Bestand ontbreekt |
+| Shipment_item | - | - | - | Bestand ontbreekt |
 
 Globaal
 | Maatstaf | Waarde |
 | --- | ---: |
-| Totaal ingelezen records | 80471 |
-| Totaal geïmporteerd | 80471 |
+| Totaal ingelezen records | 0 |
+| Totaal geïmporteerd | 0 |
 | Niet geïmporteerd | 0 |
 | Mislukte records | 0 |
-| Succespercentage | 100,00% |
-| Voltooide entiteiten | 16 / 16 |
-| Uitvoeringstijd | 00:00:06.0752306 |
+| Succespercentage | 0,00% |
+| Voltooide entiteiten | 0 / 16 |
+| Uitvoeringstijd | 00:00:00.0373462 |
 

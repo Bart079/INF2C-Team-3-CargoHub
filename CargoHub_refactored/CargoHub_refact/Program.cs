@@ -16,7 +16,7 @@ builder.Services.AddScoped<ITransferService, TransferService>();
 builder.Services.AddScoped<IWarehouseService, WarehouseService>();
 
 var app = builder.Build();
-// MigrationService.Run(); run om migration te doen
+//MigrationService.Run(); // run om migration te doen
 app.MapControllers();
 
 app.Run();

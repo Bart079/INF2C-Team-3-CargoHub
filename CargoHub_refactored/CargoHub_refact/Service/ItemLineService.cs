@@ -13,20 +13,20 @@ public class ItemLineService : IItemLineService
     }
     public async Task<IEnumerable<ItemLineModel>> GetAllAsync()
     {
-        return await Item_lineAcces.GetAllAsync();
+        return await Item_lineAcces.GetAll();
     }
     public async Task<ItemLineModel?> GetByIdAsync(int id)
     {
         if (id < 0)
         return null;
 
-        return await Item_lineAcces.GetByIdAsync(id);
+        return await Item_lineAcces.GetById(id);
     }
 
     public async Task<ItemLineModel> CreateAsync(ItemLineModel model)
     {
         ValidateItemLine(model);
-        return await Item_lineAcces.CreateAsync(model);
+        return await Item_lineAcces.Create(model);
     }
 
     public async Task<bool> UpdateAsync(int id, ItemLineModel model)
@@ -35,7 +35,7 @@ public class ItemLineService : IItemLineService
         return false;
 
         ValidateItemLine(model);
-        return await Item_lineAcces.UpdateAsync(id,model);
+        return await Item_lineAcces.Update(id,model);
     }
 
     public async Task<bool> DeleteAsync(int id)
@@ -43,7 +43,7 @@ public class ItemLineService : IItemLineService
         if (id < 0)
         return false;
 
-        return await Item_lineAcces.DeleteAsync(id);
+        return await Item_lineAcces.Delete(id);
     }
 
 //checkt niet of ID ongeldig is of dat er geen orders zijn
@@ -52,6 +52,6 @@ public class ItemLineService : IItemLineService
         if (id < 0)
         return Enumerable.Empty<ItemModel>(); //geeft een lege lijst
 
-        return await Item_lineAcces.GetItemsAsync(id);
+        return await Item_lineAcces.GetItems(id);
     }
 }

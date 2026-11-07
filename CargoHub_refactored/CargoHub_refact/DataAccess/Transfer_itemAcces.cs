@@ -1,3 +1,5 @@
+using System.Data;
+
 namespace Project.DataAccess;
 
 public static class Transfer_itemAcces
@@ -36,5 +38,23 @@ public static class Transfer_itemAcces
     {
         DropTable(path);
         CreateTable(path);
+    }
+
+    public static async Task<IEnumerable<TransferItemModel>> GetItems(
+        int transferId,
+        IDbConnection connection,
+        IDbTransaction transaction)
+    {
+        const string sql = @"
+            SELECT
+                transfer_item_id AS ID,
+                transfer_id AS Transfer_ID,
+                item_id AS Item_ID,
+                amount AS Amount
+            FROM Transfer_item
+            WHERE transfer_id = @transferId;";
+
+        return await connection.QueryAsync<TransferItemModel>(
+            sql, new { transferId }, transaction);
     }
 }

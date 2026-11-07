@@ -12,7 +12,7 @@ public class LocationService : ILocationService
     }
     public async Task<IEnumerable<LocationModel>> GetAllAsync()
     {
-        return await LocationAcces.GetAllAsync();
+        return await LocationAcces.GetAll();
     }
 
     public async Task<LocationModel?> GetByIdAsync(int id)
@@ -20,14 +20,14 @@ public class LocationService : ILocationService
         if (id < 0)
         return null;
 
-        return await LocationAcces.GetByIdAsync(id );
+        return await LocationAcces.GetById(id);
     }
 
     public async Task<LocationModel> CreateAsync(LocationModel model)
     {
         ValidateLocation(model);
 
-        return await LocationAcces.CreateAsync(model);
+        return await LocationAcces.Create(model);
     }
 
     public async Task<bool> UpdateAsync(int id, LocationModel model)
@@ -37,7 +37,7 @@ public class LocationService : ILocationService
 
         ValidateLocation(model);
 
-        return await LocationAcces.UpdateAsync(id,model);
+        return await LocationAcces.Update(id,model);
     }
 
     public async Task<bool> DeleteAsync(int id)
@@ -45,6 +45,6 @@ public class LocationService : ILocationService
         if (id < 0)
             return false;
 
-        return await LocationAcces.DeleteAsync(id);
+        return await LocationAcces.Delete(id);
     }
 }
