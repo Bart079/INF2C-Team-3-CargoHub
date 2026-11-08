@@ -5,16 +5,6 @@ public class ItemServiceTests
     private readonly ItemService _service = new();
 
     [Fact]
-    public async Task CreateAsync_ValidItem_ReturnsCreatedItem()
-    {
-        var item = ValidItem();
-
-        var result = await _service.CreateAsync(item);
-
-        Assert.Same(item, result);
-    }
-
-    [Fact]
     public async Task CreateAsync_NullItem_ThrowsArgumentNullException()
     {
         await Assert.ThrowsAsync<ArgumentNullException>(

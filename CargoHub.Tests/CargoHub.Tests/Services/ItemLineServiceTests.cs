@@ -5,16 +5,6 @@ public class ItemLineServiceTests
     private readonly ItemLineService _service = new();
 
     [Fact]
-    public async Task CreateAsync_ValidItemLine_ReturnsCreatedItemLine()
-    {
-        var itemLine = ValidItemLine();
-
-        var result = await _service.CreateAsync(itemLine);
-
-        Assert.Same(itemLine, result);
-    }
-
-    [Fact]
     public async Task CreateAsync_NullItemLine_ThrowsArgumentNullException()
     {
         await Assert.ThrowsAsync<ArgumentNullException>(

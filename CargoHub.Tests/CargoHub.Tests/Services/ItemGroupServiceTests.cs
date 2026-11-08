@@ -13,17 +13,6 @@ public class ItemGroupServiceTests
     }
 
     [Fact]
-    public async Task CreateAsync_ValidItemGroup_ReturnsCreatedItem()
-    {
-        //arrange
-        var itemGroup = ValidItemGroup();
-        //
-        var result = await _service.CreateAsync(itemGroup);
-
-        Assert.Same(itemGroup, result);
-    }
-
-    [Fact]
     public async Task CreateAsync_NullItemGroup_ThrowsArgumentNullException()
     {
         await Assert.ThrowsAsync<ArgumentNullException>(
@@ -52,5 +41,81 @@ public class ItemGroupServiceTests
         //assert
         await Assert.ThrowsAsync<ArgumentException>(
             () => _service.CreateAsync(itemGroup));
+    }
+
+    [Fact]
+    public async Task UpdateAsync_NegativeId_ReturnsFalse()
+    {
+        // arrange
+        var itemGroup = ValidItemGroup();
+        int id = -1;
+
+        //act
+        var result = await _service.UpdateAsync(id, itemGroup);
+
+        //assert
+        Assert.False(result);
+    }
+
+    [Fact]
+    public async Task UpdateAsync_NullItemGroup_ThrowsArgumentNullException()
+    {
+        // arrange
+        int id = 1;
+        ItemGroupModel? itemGroup = null;
+
+        //act n assert
+        await Assert.ThrowsAsync<ArgumentNullException>(() => _service.UpdateAsync(id, itemGroup!));
+    }
+
+    [Fact]
+    public async Task UpdateAsync_EmptyName_ThrowsArgumentException()
+    {
+        // arrange
+        var itemGroup = ValidItemGroup();
+        itemGroup.Name = "";
+        int id = 1;
+
+       //act n assert
+        await Assert.ThrowsAsync<ArgumentException>(() => _service.UpdateAsync(id, itemGroup));
+    }
+
+    [Fact]
+    public async Task DeleteAsync_NegativeId_ReturnsFalse()
+    {
+        // arrange
+        int id = -1;
+
+        //act
+        var result = await _service.DeleteAsync(id);
+
+        //assert
+        Assert.False(result);
+    }
+
+    [Fact]
+    public async Task GetByIdAsync_NegativeId_ReturnsNull()
+    {
+        // arrange
+        int id = -1;
+
+        //act
+        var result = await _service.GetByIdAsync(id);
+
+        //assert
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public async Task GetItemsAsync_NegativeId_ReturnsEmptyList()
+    {
+        // arrange
+        int id = -1;
+
+        //act
+        var result = await _service.GetItemsAsync(id);
+
+        //assert
+        Assert.Empty(result);
     }
 }

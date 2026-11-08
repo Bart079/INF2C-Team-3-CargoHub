@@ -90,6 +90,27 @@ public sealed class AccessTestDatabase : IDisposable
         });
     }
 
+    public Task<ItemTypeModel> CreateItemType() =>
+    Item_typeAcces.Create(new ItemTypeModel
+    {
+        Name = $"Test Type {Guid.NewGuid():N}",
+        Description = "Test item type"
+    });
+
+    public Task<ItemLineModel> CreateItemLine() =>
+    Item_lineAcces.Create(new ItemLineModel
+    {
+        Name = $"Test Line {Guid.NewGuid():N}",
+        Description = "Test item line"
+    });
+
+    public Task<ItemGroupModel> CreateItemGroup() =>
+    Item_groupAcces.Create(new ItemGroupModel
+    {
+        Name = $"Test Group {Guid.NewGuid():N}",
+        Description = "Test item group"
+    });
+
     public async Task<LocationModel> CreateLocation()
     {
         using var connection = DatabaseConnection.CreateConnection();
