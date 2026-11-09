@@ -1,0 +1,5 @@
+"Endpoint","Concurrency","TotalRequests","Successful","Failed","AverageMs","TotalSeconds","RequestsPerSecond"
+"/api/v1/clients/1/orders","1","20","20","0","1532.49","30.66","0.65"
+"/api/v1/clients/1/orders","5","20","20","0","4609.37","29.72","0.67"
+"/api/v1/clients/1/orders","10","20","20","0","9092.38","29.54","0.68"
+"/api/v1/clients/1/orders","20","20","19","1","19840.86","27.73","0.72"

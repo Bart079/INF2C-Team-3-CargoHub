@@ -1,0 +1,4 @@
+endpoint,concurrency,total,successful,failed,average_ms,total_seconds,requests_per_second
+/api/v1/clients/1/orders,1,5,5,0,3502.35,17.51,0.29
+/api/v1/clients/1/orders,2,5,5,0,3779.31,10.45,0.48
+/api/v1/clients/1/orders,5,5,5,0,6398.69,9.29,0.54
