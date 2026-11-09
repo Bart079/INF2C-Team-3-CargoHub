@@ -1,150 +1,154 @@
-using Microsoft.AspNetCore.Mvc;
+using System.Net;
+using System.Net.Http.Json;
 
-public class ItemApiTests
+public class ItemApiTests : IDisposable
 {
-    private readonly ItemsController _controller;
-
-    public ItemApiTests()
-    {
-        _controller = new ItemsController(new FakeItemsService());
-    }
-
-    private static ItemModel ValidItem()
-    {
-        return new ItemModel
-        {
-            ID = 1,
-            Code = "TEST001",
-            Description = "Test Item Description",
-            Barcode = "1234567890123",
-            Model_Number = "TEST-MODEL-001",
-            Commodity_Code = 1234,
-            Unit_Weight = 1.5m,
-            Item_Line_ID = 1,
-            Item_Group_ID = 1,
-            Item_Type_ID = 1,
-            Min_Purchase_Quantity = 1,
-            Case_Size = 10,
-            Packaging_Type = "Box",
-            Order_Multiple = 1,
-            Supplier_ID = 1,
-            Supplier_SKU = "SUPPLIER-001",
-            Created_At = DateTime.UtcNow,
-            Updated_At = DateTime.UtcNow
-        };
-    }
+    private const string Url = "/api/v1/items";
+    private readonly ApiTestContext _context = new();
 
     [Fact]
     public async Task GetAll_Returns200()
     {
-        var result = await _controller.GetAll();
+        var response = await _context.Client.GetAsync(Url);
 
-        var ok = Assert.IsType<OkObjectResult>(result);
-        Assert.Equal(200, ok.StatusCode);
-        Assert.Single(
-            Assert.IsAssignableFrom<IEnumerable<ItemModel>>(ok.Value));
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.NotNull(await response.Content.ReadFromJsonAsync<List<ItemModel>>());
     }
 
     [Fact]
     public async Task GetById_Existing_Returns200()
     {
-        var result = await _controller.GetById(1);
+        var item = await _context.Database.CreateItem();
 
-        var ok = Assert.IsType<OkObjectResult>(result);
-        Assert.Equal(200, ok.StatusCode);
+        var response = await _context.Client.GetAsync($"{Url}/{item.ID}");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var result = await response.Content.ReadFromJsonAsync<ItemModel>();
+        Assert.NotNull(result);
+        Assert.Equal(item.ID, result.ID);
     }
 
     [Fact]
     public async Task GetById_Unknown_Returns404()
     {
-        var result = await _controller.GetById(999999);
+        var response = await _context.Client.GetAsync($"{Url}/999999");
 
-        Assert.IsType<NotFoundResult>(result);
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
     [Fact]
-    public async Task Create_Returns201()
+    public async Task Create_Valid_Returns201()
     {
-        var result = await _controller.Create(ValidItem());
+        var item = await CreateValidItem();
 
-        var created = Assert.IsType<CreatedAtActionResult>(result);
+        var response = await _context.Client.PostAsJsonAsync(Url, item);
 
-        Assert.Equal(201, created.StatusCode);
-        Assert.Equal(nameof(ItemsController.GetById),
-            created.ActionName);
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        var created = await response.Content.ReadFromJsonAsync<ItemModel>();
+        Assert.NotNull(created);
+        Assert.True(created.ID > 0);
+
+        var getResponse = await _context.Client.GetAsync($"{Url}/{created.ID}");
+        Assert.Equal(HttpStatusCode.OK, getResponse.StatusCode);
     }
 
     [Fact]
     public async Task Update_Existing_Returns204()
     {
-        var result = await _controller.Update(1, ValidItem());
+        var item = await _context.Database.CreateItem();
+        item.Description = "Updated description";
 
-        Assert.IsType<NoContentResult>(result);
+        var response = await _context.Client.PutAsJsonAsync(
+            $"{Url}/{item.ID}", item);
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        var getResponse = await _context.Client.GetAsync($"{Url}/{item.ID}");
+        Assert.Equal(HttpStatusCode.OK, getResponse.StatusCode);
+        var updated = await getResponse.Content.ReadFromJsonAsync<ItemModel>();
+        Assert.NotNull(updated);
+        Assert.Equal("Updated description", updated.Description);
     }
 
     [Fact]
     public async Task Update_Unknown_Returns404()
     {
-        var result = await _controller.Update(
-            999999, ValidItem());
+        var item = await CreateValidItem();
 
-        Assert.IsType<NotFoundResult>(result);
+        var response = await _context.Client.PutAsJsonAsync(
+            $"{Url}/999999", item);
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
     [Fact]
     public async Task Delete_Existing_Returns204()
     {
-        var result = await _controller.Delete(1);
+        var item = await _context.Database.CreateItem();
 
-        Assert.IsType<NoContentResult>(result);
+        var response = await _context.Client.DeleteAsync($"{Url}/{item.ID}");
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
     }
 
     [Fact]
     public async Task Delete_Unknown_Returns404()
     {
-        var result = await _controller.Delete(999999);
+        var response = await _context.Client.DeleteAsync($"{Url}/999999");
 
-        Assert.IsType<NotFoundResult>(result);
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
-
-    // Nepservice: geen database nodig
-    private class FakeItemsService : IItemService
+    [Fact]
+    public async Task GetInventory_ExistingItem_Returns200()
     {
-        public Task<IEnumerable<ItemModel>> GetAllAsync()         
-        {
-            IEnumerable<ItemModel> items =
-                new[] { ValidItem() };
+        var item = await _context.Database.CreateItem();
 
-            return Task.FromResult(items);
-        }
-        public Task<ItemModel?> GetByIdAsync(long id)         
-        {
-            ItemModel? item =
-                id == 1 ? ValidItem() : null;
+        var response = await _context.Client.GetAsync(
+            $"{Url}/{item.ID}/inventory");
 
-            return Task.FromResult(item);
-        }
-        public Task<ItemModel> CreateAsync(ItemModel model)
-        {
-            model.ID = 2;
-            return Task.FromResult(model);
-        }
-
-        public Task<bool> UpdateAsync(long id, ItemModel model) 
-        {
-            return Task.FromResult(id == 1);
-        }
-
-        public Task<bool> DeleteAsync(long id)
-        {
-            return Task.FromResult(id == 1);
-        }
-
-        public Task<IEnumerable<InventoryModel>?> GetInventoryAsync(long id) =>
-            Task.FromResult<IEnumerable<InventoryModel>?>(Array.Empty<InventoryModel>());
-
-        public Task<InventoryTotalsModel?> GetInventoryTotalsAsync(long id) =>
-            Task.FromResult<InventoryTotalsModel?>(null);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.NotNull(
+            await response.Content.ReadFromJsonAsync<List<InventoryModel>>());
     }
+
+    [Fact]
+    public async Task GetInventory_UnknownItem_Returns404()
+    {
+        var response = await _context.Client.GetAsync(
+            $"{Url}/999999/inventory");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetInventoryTotals_ExistingItem_Returns200()
+    {
+        var item = await _context.Database.CreateItem();
+
+        var response = await _context.Client.GetAsync(
+            $"{Url}/{item.ID}/inventory/totals");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.NotNull(
+            await response.Content.ReadFromJsonAsync<InventoryTotalsModel>());
+    }
+
+    [Fact]
+    public async Task GetInventoryTotals_UnknownItem_Returns404()
+    {
+        var response = await _context.Client.GetAsync(
+            $"{Url}/999999/inventory/totals");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    private async Task<ItemModel> CreateValidItem()
+    {
+        var item = await _context.Database.CreateItem();
+        item.ID = 0;
+        item.Code = $"ITEM-{Guid.NewGuid():N}";
+        return item;
+    }
+
+    public void Dispose() => _context.Dispose();
 }

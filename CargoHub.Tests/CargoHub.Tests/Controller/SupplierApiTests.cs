@@ -1,20 +1,138 @@
-using Microsoft.AspNetCore.Mvc;
+using System.Net;
+using System.Net.Http.Json;
 
-public class SupplierApiTests
+public class SupplierApiTests : IDisposable
 {
-    private readonly SuppliersController _controller;
+    private const string Url = "/api/v1/suppliers";
+    private readonly ApiTestContext _context = new();
 
-    public SupplierApiTests()
+    [Fact]
+    public async Task GetAll_Returns200()
     {
-        _controller = new SuppliersController(new FakeSupplierService());
+        var supplier = await _context.Database.CreateSupplier();
+
+        var response = await _context.Client.GetAsync(Url);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var suppliers =
+            await response.Content.ReadFromJsonAsync<List<SupplierModel>>();
+        Assert.NotNull(suppliers);
+        Assert.Contains(suppliers, result => result.ID == supplier.ID);
     }
 
-    private static SupplierModel ValidSupplier()
+    [Fact]
+    public async Task GetById_Existing_Returns200()
     {
-        return new SupplierModel
+        var supplier = await _context.Database.CreateSupplier();
+
+        var response = await _context.Client.GetAsync(
+            $"{Url}/{supplier.ID}");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var result = await response.Content.ReadFromJsonAsync<SupplierModel>();
+        Assert.NotNull(result);
+        Assert.Equal(supplier.ID, result.ID);
+    }
+
+    [Fact]
+    public async Task GetById_Unknown_Returns404()
+    {
+        var response = await _context.Client.GetAsync($"{Url}/999999");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Create_Returns201()
+    {
+        var response = await _context.Client.PostAsJsonAsync(
+            Url, ValidSupplier());
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        var created = await response.Content.ReadFromJsonAsync<SupplierModel>();
+        Assert.NotNull(created);
+        Assert.True(created.ID > 0);
+        Assert.NotNull(response.Headers.Location);
+    }
+
+    [Fact]
+    public async Task Update_Existing_Returns204()
+    {
+        var supplier = await _context.Database.CreateSupplier();
+        supplier.Name = "Updated supplier";
+
+        var response = await _context.Client.PutAsJsonAsync(
+            $"{Url}/{supplier.ID}", supplier);
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        var getResponse = await _context.Client.GetAsync(
+            $"{Url}/{supplier.ID}");
+        Assert.Equal(HttpStatusCode.OK, getResponse.StatusCode);
+        var updated =
+            await getResponse.Content.ReadFromJsonAsync<SupplierModel>();
+        Assert.NotNull(updated);
+        Assert.Equal("Updated supplier", updated.Name);
+    }
+
+    [Fact]
+    public async Task Update_Unknown_Returns404()
+    {
+        var supplier = ValidSupplier();
+        supplier.ID = 999999;
+
+        var response = await _context.Client.PutAsJsonAsync(
+            $"{Url}/999999", supplier);
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Delete_Existing_Returns204()
+    {
+        var supplier = await _context.Database.CreateSupplier();
+
+        var response = await _context.Client.DeleteAsync(
+            $"{Url}/{supplier.ID}");
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Delete_Unknown_Returns404()
+    {
+        var response = await _context.Client.DeleteAsync($"{Url}/999999");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetItems_ExistingSupplier_Returns200()
+    {
+        var supplier = await _context.Database.CreateSupplier();
+        var item = await _context.Database.CreateItem();
+
+        var response = await _context.Client.GetAsync(
+            $"{Url}/{supplier.ID}/items");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var items = await response.Content.ReadFromJsonAsync<List<ItemModel>>();
+        Assert.NotNull(items);
+        Assert.Contains(items, result => result.ID == item.ID);
+    }
+
+    [Fact]
+    public async Task GetItems_UnknownSupplier_Returns404()
+    {
+        var response = await _context.Client.GetAsync(
+            $"{Url}/999999/items");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    private static SupplierModel ValidSupplier() =>
+        new()
         {
-            ID = 1,
-            Code = "TEST001",
+            Code = $"SUP-{Guid.NewGuid():N}",
             Name = "Test Supplier",
             Address = "Teststraat 10",
             City = "Rotterdam",
@@ -23,141 +141,8 @@ public class SupplierApiTests
             Country = "Netherlands",
             Contact_Name = "Test Persoon",
             Phone_Number = "0612345678",
-            Reference = "TEST"
+            Reference = $"REF-{Guid.NewGuid():N}"
         };
-    }
 
-    [Fact]
-    public async Task GetAll_Returns200()
-    {
-        var result = await _controller.GetAll();
-
-        var ok = Assert.IsType<OkObjectResult>(result);
-        Assert.Equal(200, ok.StatusCode);
-        Assert.Single(
-            Assert.IsAssignableFrom<IEnumerable<SupplierModel>>(ok.Value));
-    }
-
-    [Fact]
-    public async Task GetById_Existing_Returns200()
-    {
-        var result = await _controller.GetById(1);
-
-        var ok = Assert.IsType<OkObjectResult>(result);
-        Assert.Equal(200, ok.StatusCode);
-    }
-
-    [Fact]
-    public async Task GetById_Unknown_Returns404()
-    {
-        var result = await _controller.GetById(999999);
-
-        Assert.IsType<NotFoundResult>(result);
-    }
-
-    [Fact]
-    public async Task Create_Returns201()
-    {
-        var result = await _controller.Create(ValidSupplier());
-
-        var created = Assert.IsType<CreatedAtActionResult>(result);
-
-        Assert.Equal(201, created.StatusCode);
-        Assert.Equal(nameof(SuppliersController.GetById),
-            created.ActionName);
-    }
-
-    [Fact]
-    public async Task Update_Existing_Returns204()
-    {
-        var result = await _controller.Update(1, ValidSupplier());
-
-        Assert.IsType<NoContentResult>(result);
-    }
-
-    [Fact]
-    public async Task Update_Unknown_Returns404()
-    {
-        var result = await _controller.Update(
-            999999, ValidSupplier());
-
-        Assert.IsType<NotFoundResult>(result);
-    }
-
-    [Fact]
-    public async Task Delete_Existing_Returns204()
-    {
-        var result = await _controller.Delete(1);
-
-        Assert.IsType<NoContentResult>(result);
-    }
-
-    [Fact]
-    public async Task Delete_Unknown_Returns404()
-    {
-        var result = await _controller.Delete(999999);
-
-        Assert.IsType<NotFoundResult>(result);
-    }
-
-    [Fact]
-    public async Task GetItems_ExistingSupplier_Returns200()
-    {
-        var result = await _controller.GetItems(1);
-
-        var ok = Assert.IsType<OkObjectResult>(result);
-        Assert.Equal(200, ok.StatusCode);
-    }
-
-    [Fact]
-    public async Task GetItems_UnknownSupplier_Returns404()
-    {
-        var result = await _controller.GetItems(999999);
-
-        Assert.IsType<NotFoundResult>(result);
-    }
-
-    // Nepservice: geen database nodig
-    private class FakeSupplierService : ISupplierService
-    {
-        public Task<IEnumerable<SupplierModel>> GetAllAsync()
-        {
-            IEnumerable<SupplierModel> suppliers =
-                new[] { ValidSupplier() };
-
-            return Task.FromResult(suppliers);
-        }
-
-        public Task<SupplierModel?> GetByIdAsync(int id)
-        {
-            SupplierModel? supplier =
-                id == 1 ? ValidSupplier() : null;
-
-            return Task.FromResult(supplier);
-        }
-
-        public Task<SupplierModel> CreateAsync(SupplierModel model)
-        {
-            model.ID = 2;
-            return Task.FromResult(model);
-        }
-
-        public Task<bool> UpdateAsync(int id, SupplierModel model)
-        {
-            return Task.FromResult(id == 1);
-        }
-
-        public Task<bool> DeleteAsync(int id)
-        {
-            return Task.FromResult(id == 1);
-        }
-
-        public Task<IEnumerable<ItemModel>> GetSupplierItemsAsync(int id)
-        {
-            IEnumerable<ItemModel> items =
-                new[] { new ItemModel { ID = 1, Supplier_ID = id } };
-
-            return Task.FromResult(items);
-        }
-    }
+    public void Dispose() => _context.Dispose();
 }

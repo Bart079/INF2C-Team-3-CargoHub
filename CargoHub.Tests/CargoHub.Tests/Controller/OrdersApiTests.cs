@@ -1,119 +1,154 @@
-using Microsoft.AspNetCore.Mvc;
+using System.Net;
+using System.Net.Http.Json;
 
-public class OrdersApiTests
+public class OrdersApiTests : IDisposable
 {
-    private readonly OrdersController _controller = new(new FakeOrderService());
-
-    private static OrderModel ValidModel() =>
-        new()
-        {
-            ID = 1,
-            Client_ID = 1,
-            Reference = "ORDER-1",
-            Customer_PO_Number = "PO-1",
-            Order_Status = "pending",
-            Shipping_Notes = "Notes"
-        };
+    private const string Url = "/api/v1/orders";
+    private readonly ApiTestContext _context = new();
 
     [Fact]
     public async Task GetAll_Returns200()
     {
-        var ok = Assert.IsType<OkObjectResult>(await _controller.GetAll());
-        Assert.Single(Assert.IsAssignableFrom<IEnumerable<OrderModel>>(ok.Value));
+        var order = await _context.Database.CreateOrder();
+
+        var response = await _context.Client.GetAsync(Url);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var orders = await response.Content.ReadFromJsonAsync<List<OrderModel>>();
+        Assert.NotNull(orders);
+        Assert.Contains(orders, result => result.ID == order.ID);
     }
 
     [Fact]
     public async Task GetById_Existing_Returns200()
     {
-        Assert.IsType<OkObjectResult>(await _controller.GetById(1));
+        var order = await _context.Database.CreateOrder();
+
+        var response = await _context.Client.GetAsync($"{Url}/{order.ID}");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var result = await response.Content.ReadFromJsonAsync<OrderModel>();
+        Assert.NotNull(result);
+        Assert.Equal(order.ID, result.ID);
     }
 
     [Fact]
     public async Task GetById_Unknown_Returns404()
     {
-        Assert.IsType<NotFoundResult>(await _controller.GetById(2));
+        var response = await _context.Client.GetAsync($"{Url}/999999");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
     [Fact]
     public async Task Create_Returns201WithRouteId()
     {
-        var created = Assert.IsType<CreatedAtActionResult>(
-            await _controller.Create(ValidModel()));
-        Assert.Equal(201, created.StatusCode);
-        Assert.Equal(nameof(OrdersController.GetById), created.ActionName);
-        Assert.Equal(2, created.RouteValues!["id"]);
+        var model = await CreateValidOrder();
+
+        var response = await _context.Client.PostAsJsonAsync(Url, model);
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        var created = await response.Content.ReadFromJsonAsync<OrderModel>();
+        Assert.NotNull(created);
+        Assert.True(created.ID > 0);
+        Assert.NotNull(response.Headers.Location);
     }
 
     [Fact]
     public async Task Update_Existing_Returns204()
     {
-        Assert.IsType<NoContentResult>(await _controller.Update(1, ValidModel()));
+        var order = await _context.Database.CreateOrder();
+        order.Shipping_Notes = "Updated notes";
+
+        var response = await _context.Client.PutAsJsonAsync(
+            $"{Url}/{order.ID}", order);
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        var getResponse = await _context.Client.GetAsync($"{Url}/{order.ID}");
+        Assert.Equal(HttpStatusCode.OK, getResponse.StatusCode);
+        var updated = await getResponse.Content.ReadFromJsonAsync<OrderModel>();
+        Assert.NotNull(updated);
+        Assert.Equal("Updated notes", updated.Shipping_Notes);
     }
 
     [Fact]
     public async Task Update_Unknown_Returns404()
     {
-        Assert.IsType<NotFoundResult>(await _controller.Update(2, ValidModel()));
+        var model = await CreateValidOrder();
+
+        var response = await _context.Client.PutAsJsonAsync(
+            $"{Url}/999999", model);
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
     [Fact]
     public async Task Delete_Existing_Returns204()
     {
-        Assert.IsType<NoContentResult>(await _controller.Delete(1));
+        var order = await _context.Database.CreateOrder();
+
+        var response = await _context.Client.DeleteAsync($"{Url}/{order.ID}");
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
     }
 
     [Fact]
     public async Task Delete_Unknown_Returns404()
     {
-        Assert.IsType<NotFoundResult>(await _controller.Delete(2));
+        var response = await _context.Client.DeleteAsync($"{Url}/999999");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
     [Fact]
     public async Task GetItems_Existing_Returns200()
     {
-        var ok = Assert.IsType<OkObjectResult>(await _controller.GetItems(1));
-        Assert.IsAssignableFrom<IEnumerable<OrderItemModel>>(ok.Value);
+        var order = await _context.Database.CreateOrder();
+
+        var response = await _context.Client.GetAsync(
+            $"{Url}/{order.ID}/items");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.NotNull(
+            await response.Content.ReadFromJsonAsync<List<OrderItemModel>>());
     }
 
     [Fact]
     public async Task GetItems_Unknown_Returns404()
     {
-        Assert.IsType<NotFoundResult>(await _controller.GetItems(2));
+        var response = await _context.Client.GetAsync(
+            $"{Url}/999999/items");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
     [Fact]
     public async Task UpdateItems_Existing_Returns204()
     {
-        Assert.IsType<NoContentResult>(
-            await _controller.UpdateItems(1, Array.Empty<OrderItemModel>()));
+        var order = await _context.Database.CreateOrder();
+
+        var response = await _context.Client.PutAsJsonAsync(
+            $"{Url}/{order.ID}/items", Array.Empty<OrderItemModel>());
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
     }
 
     [Fact]
     public async Task UpdateItems_Unknown_Returns404()
     {
-        Assert.IsType<NotFoundResult>(
-            await _controller.UpdateItems(2, Array.Empty<OrderItemModel>()));
+        var response = await _context.Client.PutAsJsonAsync(
+            $"{Url}/999999/items", Array.Empty<OrderItemModel>());
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
-    private sealed class FakeOrderService : IOrderService
+    private async Task<OrderModel> CreateValidOrder()
     {
-        public Task<IEnumerable<OrderModel>> GetAllAsync() =>
-            Task.FromResult<IEnumerable<OrderModel>>([ValidModel()]);
-        public Task<OrderModel?> GetByIdAsync(int id) =>
-            Task.FromResult(id == 1 ? ValidModel() : null);
-        public Task<OrderModel> CreateAsync(OrderModel model)
-        {
-            model.ID = 2;
-            return Task.FromResult(model);
-        }
-        public Task<bool> UpdateAsync(int id, OrderModel model) =>
-            Task.FromResult(id == 1);
-        public Task<bool> DeleteAsync(int id) => Task.FromResult(id == 1);
-        public Task<IEnumerable<OrderItemModel>> GetItemsAsync(int id) =>
-            Task.FromResult<IEnumerable<OrderItemModel>>(
-                [new OrderItemModel { ID = 1, Order_ID = id }]);
-        public Task<bool> UpdateItemsAsync(
-            int id, IEnumerable<OrderItemModel> items) =>
-            Task.FromResult(id == 1);
+        var order = await _context.Database.CreateOrder();
+        order.ID = 0;
+        order.Reference = $"ORDER-{Guid.NewGuid():N}";
+        return order;
     }
+
+    public void Dispose() => _context.Dispose();
 }

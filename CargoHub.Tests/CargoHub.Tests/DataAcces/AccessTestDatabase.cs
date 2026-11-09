@@ -111,29 +111,92 @@ public sealed class AccessTestDatabase : IDisposable
         Description = "Test item group"
     });
 
-    public async Task<LocationModel> CreateLocation()
+    public Task<SupplierModel> CreateSupplier() =>
+        SupplierAcces.Create(new SupplierModel
+        {
+            Code = $"SUP-{Guid.NewGuid():N}",
+            Name = "Test Supplier",
+            Address = "1 Test Street",
+            City = "Test City",
+            Zip_Code = "12345",
+            Province = "Test Province",
+            Country = "Test Country",
+            Contact_Name = "Test Contact",
+            Phone_Number = "12345678",
+            Reference = $"SUP-REF-{Guid.NewGuid():N}"
+        });
+
+    public Task<WarehouseModel> CreateWarehouse() =>
+        WarehouseAcces.Create(new WarehouseModel
+        {
+            Code = $"WH-{Guid.NewGuid():N}",
+            Name = "Test Warehouse",
+            Address = "1 Warehouse Street",
+            City = "Test City",
+            Zip_Code = "12345",
+            Province = "Test Province",
+            Country = "Test Country",
+            Contact_Name = "Warehouse Contact",
+            Contact_Phone = "12345678",
+            Contact_Email = $"warehouse-{Guid.NewGuid():N}@example.com"
+        });
+
+    public async Task<LocationModel> CreateLocation(
+        WarehouseModel? warehouse = null)
     {
-        using var connection = DatabaseConnection.CreateConnection();
-        await connection.OpenAsync();
-        var warehouseId = await connection.ExecuteScalarAsync<int>("""
-            INSERT INTO Warehouse (
-                code, name, address, city, zip_code, province, country,
-                contact_name, contact_phone, contact_email
-            )
-            VALUES (
-                'WH-1', 'Test Warehouse', '1 Warehouse Street', 'Test City',
-                '12345', 'Test Province', 'Test Country',
-                'Warehouse Contact', '12345678', 'warehouse@example.com'
-            );
-            SELECT last_insert_rowid();
-            """);
+        warehouse ??= await CreateWarehouse();
 
         return await LocationAcces.Create(new LocationModel
         {
-            Warehouse_ID = warehouseId,
+            Warehouse_ID = warehouse.ID,
             Code = $"LOC-{Guid.NewGuid():N}",
             Name = "Test Location"
         });
+    }
+
+    public async Task<InventoryModel> CreateInventory(
+        ItemModel? item = null,
+        LocationModel? location = null)
+    {
+        item ??= await CreateItem();
+        location ??= await CreateLocation();
+
+        return await InventoryAcces.Create(new InventoryModel
+        {
+            Item_ID = checked((int)item.ID),
+            Location_ID = location.ID,
+            Quantity_On_Hand = 10,
+            Quantity_Expected = 0,
+            Quantity_Ordered = 0,
+            Quantity_Allocated = 0
+        });
+    }
+
+    public async Task<TransferModel> CreateTransfer()
+    {
+        var fromLocation = await CreateLocation();
+        var toLocation = await CreateLocation();
+
+        return await TransferAcces.Create(new TransferModel
+        {
+            Reference = $"TRANSFER-{Guid.NewGuid():N}",
+            From_Location_ID = fromLocation.ID,
+            To_Location_ID = toLocation.ID,
+            Transfer_Status = "Scheduled"
+        });
+    }
+
+    public async Task AddTransferItem(
+        int transferId,
+        int itemId,
+        decimal amount)
+    {
+        using var connection = DatabaseConnection.CreateConnection();
+        await connection.OpenAsync();
+        await connection.ExecuteAsync("""
+            INSERT INTO Transfer_item (transfer_id, item_id, amount)
+            VALUES (@transferId, @itemId, @amount);
+            """, new { transferId, itemId, amount });
     }
 
     public async Task<OrderModel> CreateOrder()

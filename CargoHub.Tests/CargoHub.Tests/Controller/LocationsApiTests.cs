@@ -1,79 +1,117 @@
-using Microsoft.AspNetCore.Mvc;
+using System.Net;
+using System.Net.Http.Json;
 
-public class LocationsApiTests
+public class LocationsApiTests : IDisposable
 {
-    private readonly LocationsController _controller =
-        new(new FakeLocationService());
-
-    private static LocationModel ValidModel() =>
-        new() { ID = 1, Warehouse_ID = 1, Code = "LOC-1", Name = "Location" };
+    private const string Url = "/api/v1/locations";
+    private readonly ApiTestContext _context = new();
 
     [Fact]
     public async Task GetAll_Returns200()
     {
-        var ok = Assert.IsType<OkObjectResult>(await _controller.GetAll());
-        Assert.Single(Assert.IsAssignableFrom<IEnumerable<LocationModel>>(ok.Value));
+        var location = await _context.Database.CreateLocation();
+
+        var response = await _context.Client.GetAsync(Url);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var locations =
+            await response.Content.ReadFromJsonAsync<List<LocationModel>>();
+        Assert.NotNull(locations);
+        Assert.Contains(locations, result => result.ID == location.ID);
     }
 
     [Fact]
     public async Task GetById_Existing_Returns200()
     {
-        Assert.IsType<OkObjectResult>(await _controller.GetById(1));
+        var location = await _context.Database.CreateLocation();
+
+        var response = await _context.Client.GetAsync(
+            $"{Url}/{location.ID}");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var result = await response.Content.ReadFromJsonAsync<LocationModel>();
+        Assert.NotNull(result);
+        Assert.Equal(location.ID, result.ID);
     }
 
     [Fact]
     public async Task GetById_Unknown_Returns404()
     {
-        Assert.IsType<NotFoundResult>(await _controller.GetById(2));
+        var response = await _context.Client.GetAsync($"{Url}/999999");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
     [Fact]
     public async Task Create_Returns201WithRouteId()
     {
-        var created = Assert.IsType<CreatedAtActionResult>(
-            await _controller.Create(ValidModel()));
-        Assert.Equal(201, created.StatusCode);
-        Assert.Equal(nameof(LocationsController.GetById), created.ActionName);
-        Assert.Equal(2, created.RouteValues!["id"]);
+        var warehouse = await _context.Database.CreateWarehouse();
+        var model = ValidModel(warehouse.ID);
+
+        var response = await _context.Client.PostAsJsonAsync(Url, model);
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        var created = await response.Content.ReadFromJsonAsync<LocationModel>();
+        Assert.NotNull(created);
+        Assert.True(created.ID > 0);
+        Assert.NotNull(response.Headers.Location);
     }
 
     [Fact]
     public async Task Update_Existing_Returns204()
     {
-        Assert.IsType<NoContentResult>(await _controller.Update(1, ValidModel()));
+        var location = await _context.Database.CreateLocation();
+        location.Name = "Updated location";
+
+        var response = await _context.Client.PutAsJsonAsync(
+            $"{Url}/{location.ID}", location);
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        var getResponse = await _context.Client.GetAsync(
+            $"{Url}/{location.ID}");
+        Assert.Equal(HttpStatusCode.OK, getResponse.StatusCode);
+        var updated = await getResponse.Content.ReadFromJsonAsync<LocationModel>();
+        Assert.NotNull(updated);
+        Assert.Equal("Updated location", updated.Name);
     }
 
     [Fact]
     public async Task Update_Unknown_Returns404()
     {
-        Assert.IsType<NotFoundResult>(await _controller.Update(2, ValidModel()));
+        var warehouse = await _context.Database.CreateWarehouse();
+
+        var response = await _context.Client.PutAsJsonAsync(
+            $"{Url}/999999", ValidModel(warehouse.ID));
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
     [Fact]
     public async Task Delete_Existing_Returns204()
     {
-        Assert.IsType<NoContentResult>(await _controller.Delete(1));
+        var location = await _context.Database.CreateLocation();
+
+        var response = await _context.Client.DeleteAsync(
+            $"{Url}/{location.ID}");
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
     }
 
     [Fact]
     public async Task Delete_Unknown_Returns404()
     {
-        Assert.IsType<NotFoundResult>(await _controller.Delete(2));
+        var response = await _context.Client.DeleteAsync($"{Url}/999999");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
-    private sealed class FakeLocationService : ILocationService
-    {
-        public Task<IEnumerable<LocationModel>> GetAllAsync() =>
-            Task.FromResult<IEnumerable<LocationModel>>([ValidModel()]);
-        public Task<LocationModel?> GetByIdAsync(int id) =>
-            Task.FromResult(id == 1 ? ValidModel() : null);
-        public Task<LocationModel> CreateAsync(LocationModel model)
+    private static LocationModel ValidModel(int warehouseId) =>
+        new()
         {
-            model.ID = 2;
-            return Task.FromResult(model);
-        }
-        public Task<bool> UpdateAsync(int id, LocationModel model) =>
-            Task.FromResult(id == 1);
-        public Task<bool> DeleteAsync(int id) => Task.FromResult(id == 1);
-    }
+            Warehouse_ID = warehouseId,
+            Code = $"LOC-{Guid.NewGuid():N}",
+            Name = "Test location"
+        };
+
+    public void Dispose() => _context.Dispose();
 }

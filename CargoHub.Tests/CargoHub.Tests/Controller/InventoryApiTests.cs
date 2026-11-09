@@ -1,132 +1,124 @@
-using Microsoft.AspNetCore.Mvc;
+using System.Net;
+using System.Net.Http.Json;
 
-public class InventoryApiTests
+public class InventoryApiTests : IDisposable
 {
-    private readonly InventoriesController _controller;
-
-    public InventoryApiTests()
-    {
-        _controller = new InventoriesController(new FakeInventoryService());
-    }
-
-    private static InventoryModel ValidInventory()
-    {
-        return new InventoryModel
-        {
-            Item_ID = 1,
-            Location_ID = 1,
-            Quantity_On_Hand = 100,
-            Quantity_Expected = 50,
-            Quantity_Ordered = 25,
-            Quantity_Allocated = 75
-        };
-    }
+    private const string Url = "/api/v1/inventories";
+    private readonly ApiTestContext _context = new();
 
     [Fact]
     public async Task GetAll_Returns200()
     {
-        var result = await _controller.GetAll();
+        await _context.Database.CreateInventory();
 
-        var ok = Assert.IsType<OkObjectResult>(result);
-        Assert.Equal(200, ok.StatusCode);
+        var response = await _context.Client.GetAsync(Url);
 
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var inventories =
-            Assert.IsAssignableFrom<IEnumerable<InventoryModel>>(ok.Value);
+            await response.Content.ReadFromJsonAsync<List<InventoryModel>>();
+        Assert.NotNull(inventories);
         Assert.Single(inventories);
     }
 
     [Fact]
     public async Task GetById_Existing_Returns200()
     {
-        var result = await _controller.GetById(1);
+        var inventory = await _context.Database.CreateInventory();
 
-        var ok = Assert.IsType<OkObjectResult>(result);
-        Assert.Equal(ValidInventory().ID,
-            Assert.IsType<InventoryModel>(ok.Value).ID);
+        var response = await _context.Client.GetAsync(
+            $"{Url}/{inventory.ID}");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var result = await response.Content.ReadFromJsonAsync<InventoryModel>();
+        Assert.NotNull(result);
+        Assert.Equal(inventory.ID, result.ID);
     }
 
     [Fact]
     public async Task GetById_Unknown_Returns404()
     {
-        var result = await _controller.GetById(999999);
+        var response = await _context.Client.GetAsync($"{Url}/999999");
 
-        Assert.IsType<NotFoundResult>(result);
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
     [Fact]
     public async Task Create_Returns201()
     {
-        var result = await _controller.Create(ValidInventory());
+        var item = await _context.Database.CreateItem();
+        var location = await _context.Database.CreateLocation();
+        var inventory = ValidInventory(checked((int)item.ID), location.ID);
 
-        var created = Assert.IsType<CreatedAtActionResult>(result);
+        var response = await _context.Client.PostAsJsonAsync(Url, inventory);
 
-        Assert.Equal(201, created.StatusCode);
-        Assert.Equal(nameof(InventoriesController.GetById), created.ActionName);
-        Assert.Equal(2, created.RouteValues["id"]);
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        var created = await response.Content.ReadFromJsonAsync<InventoryModel>();
+        Assert.NotNull(created);
+        Assert.True(created.ID > 0);
     }
 
     [Fact]
     public async Task Update_Existing_Returns204()
     {
-        var result = await _controller.Update(1, ValidInventory());
+        var inventory = await _context.Database.CreateInventory();
+        inventory.Quantity_On_Hand = 25;
 
-        Assert.IsType<NoContentResult>(result);
+        var response = await _context.Client.PutAsJsonAsync(
+            $"{Url}/{inventory.ID}", inventory);
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        var getResponse = await _context.Client.GetAsync(
+            $"{Url}/{inventory.ID}");
+        Assert.Equal(HttpStatusCode.OK, getResponse.StatusCode);
+        var updated =
+            await getResponse.Content.ReadFromJsonAsync<InventoryModel>();
+        Assert.NotNull(updated);
+        Assert.Equal(25, updated.Quantity_On_Hand);
     }
 
     [Fact]
     public async Task Update_Unknown_Returns404()
     {
-        var result = await _controller.Update(999999, ValidInventory());
+        var item = await _context.Database.CreateItem();
+        var location = await _context.Database.CreateLocation();
+        var inventory = ValidInventory(checked((int)item.ID), location.ID);
+        inventory.ID = 999999;
 
-        Assert.IsType<NotFoundResult>(result);
+        var response = await _context.Client.PutAsJsonAsync(
+            $"{Url}/999999", inventory);
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
     [Fact]
     public async Task Delete_Existing_Returns204()
     {
-        var result = await _controller.Delete(1);
+        var inventory = await _context.Database.CreateInventory();
 
-        Assert.IsType<NoContentResult>(result);
+        var response = await _context.Client.DeleteAsync(
+            $"{Url}/{inventory.ID}");
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
     }
 
     [Fact]
     public async Task Delete_Unknown_Returns404()
     {
-        var result = await _controller.Delete(999999);
+        var response = await _context.Client.DeleteAsync($"{Url}/999999");
 
-        Assert.IsType<NotFoundResult>(result);
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
-//fake dataa
-    private class FakeInventoryService : IInventoryService
-    {
-        public Task<IEnumerable<InventoryModel>> GetAllAsync()
+    private static InventoryModel ValidInventory(int itemId, int locationId) =>
+        new()
         {
-            IEnumerable<InventoryModel> inventories = [ValidInventory()];
-            return Task.FromResult(inventories);
-        }
+            Item_ID = itemId,
+            Location_ID = locationId,
+            Quantity_On_Hand = 100,
+            Quantity_Expected = 50,
+            Quantity_Ordered = 25,
+            Quantity_Allocated = 75
+        };
 
-        public Task<InventoryModel?> GetByIdAsync(int id)
-        {
-            InventoryModel? inventory =
-                id == 1 ? ValidInventory() : null;
-            return Task.FromResult(inventory);
-        }
-
-        public Task<InventoryModel> CreateAsync(InventoryModel model)
-        {
-            model.ID = 2;
-            return Task.FromResult(model);
-        }
-
-        public Task<bool> UpdateAsync(int id, InventoryModel model)
-        {
-            return Task.FromResult(id == 1);
-        }
-
-        public Task<bool> DeleteAsync(int id)
-        {
-            return Task.FromResult(id == 1);
-        }
-    }
+    public void Dispose() => _context.Dispose();
 }

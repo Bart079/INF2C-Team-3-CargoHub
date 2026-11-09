@@ -1,135 +1,126 @@
-using Microsoft.AspNetCore.Mvc;
+using System.Net;
+using System.Net.Http.Json;
 
-public class ItemGroupApiTests
+public class ItemGroupApiTests : IDisposable
 {
-    private readonly ItemGroupsController _controller;
-
-    public ItemGroupApiTests()
-    {
-        _controller = new ItemGroupsController(new FakeItemGroupsService());
-    }
-
-    private static ItemGroupModel ValidItemGroup()
-    {
-        return new ItemGroupModel
-        {
-            ID = 1,
-            Name = "TEST001",
-            Description = "Test ItemGroup Description",
-            Created_At = DateTime.UtcNow,
-            Updated_At = DateTime.UtcNow
-        };
-    }
+    private const string Url = "/api/v1/item_groups";
+    private readonly ApiTestContext _context = new();
 
     [Fact]
     public async Task GetAll_Returns200()
     {
-        var result = await _controller.GetAll();
+        var response = await _context.Client.GetAsync(Url);
 
-        var ok = Assert.IsType<OkObjectResult>(result);
-        Assert.Equal(200, ok.StatusCode);
-        Assert.Single(
-            Assert.IsAssignableFrom<IEnumerable<ItemGroupModel>>(ok.Value));
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.NotNull(
+            await response.Content.ReadFromJsonAsync<List<ItemGroupModel>>());
     }
 
     [Fact]
     public async Task GetById_Existing_Returns200()
     {
-        var result = await _controller.GetById(1);
+        var group = await _context.Database.CreateItemGroup();
 
-        var ok = Assert.IsType<OkObjectResult>(result);
-        Assert.Equal(200, ok.StatusCode);
+        var response = await _context.Client.GetAsync($"{Url}/{group.ID}");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var result = await response.Content.ReadFromJsonAsync<ItemGroupModel>();
+        Assert.NotNull(result);
+        Assert.Equal(group.ID, result.ID);
     }
 
     [Fact]
     public async Task GetById_Unknown_Returns404()
     {
-        var result = await _controller.GetById(999999);
+        var response = await _context.Client.GetAsync($"{Url}/999999");
 
-        Assert.IsType<NotFoundResult>(result);
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
     [Fact]
-    public async Task Create_Returns201()
+    public async Task Create_Valid_Returns201()
     {
-        var result = await _controller.Create(ValidItemGroup());
+        var response = await _context.Client.PostAsJsonAsync(Url, ValidItemGroup());
 
-        var created = Assert.IsType<CreatedAtActionResult>(result);
-
-        Assert.Equal(201, created.StatusCode);
-        Assert.Equal(nameof(ItemGroupsController.GetById),
-            created.ActionName);
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        var created = await response.Content.ReadFromJsonAsync<ItemGroupModel>();
+        Assert.NotNull(created);
+        Assert.True(created.ID > 0);
     }
 
     [Fact]
     public async Task Update_Existing_Returns204()
     {
-        var result = await _controller.Update(1, ValidItemGroup());
+        var group = await _context.Database.CreateItemGroup();
+        group.Description = "Updated description";
 
-        Assert.IsType<NoContentResult>(result);
+        var response = await _context.Client.PutAsJsonAsync(
+            $"{Url}/{group.ID}", group);
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        var getResponse = await _context.Client.GetAsync($"{Url}/{group.ID}");
+        Assert.Equal(HttpStatusCode.OK, getResponse.StatusCode);
+        var updated = await getResponse.Content.ReadFromJsonAsync<ItemGroupModel>();
+        Assert.NotNull(updated);
+        Assert.Equal("Updated description", updated.Description);
     }
 
     [Fact]
     public async Task Update_Unknown_Returns404()
     {
-        var result = await _controller.Update(
-            999999, ValidItemGroup());
+        var response = await _context.Client.PutAsJsonAsync(
+            $"{Url}/999999", ValidItemGroup());
 
-        Assert.IsType<NotFoundResult>(result);
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
     [Fact]
     public async Task Delete_Existing_Returns204()
     {
-        var result = await _controller.Delete(1);
+        var group = await _context.Database.CreateItemGroup();
 
-        Assert.IsType<NoContentResult>(result);
+        var response = await _context.Client.DeleteAsync($"{Url}/{group.ID}");
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
     }
 
     [Fact]
     public async Task Delete_Unknown_Returns404()
     {
-        var result = await _controller.Delete(999999);
+        var response = await _context.Client.DeleteAsync($"{Url}/999999");
 
-        Assert.IsType<NotFoundResult>(result);
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
-
-    // Nepservice: geen database nodig
-    private class FakeItemGroupsService : IItemGroupService
+    [Fact]
+    public async Task GetItems_ExistingGroup_Returns200()
     {
-        public Task<IEnumerable<ItemGroupModel>> GetAllAsync()         
-        {
-            IEnumerable<ItemGroupModel> items =
-                new[] { ValidItemGroup() };
+        var item = await _context.Database.CreateItem();
 
-            return Task.FromResult(items);
-        }
-        public Task<ItemGroupModel?> GetByIdAsync(int id)
-        {
-            ItemGroupModel? item =
-                id == 1 ? ValidItemGroup() : null;
+        var response = await _context.Client.GetAsync(
+            $"{Url}/{item.Item_Group_ID}/items");
 
-            return Task.FromResult(item);
-        }
-        public Task<ItemGroupModel> CreateAsync(ItemGroupModel model)
-        {
-            model.ID = 2;
-            return Task.FromResult(model);
-        }
-
-        public Task<bool> UpdateAsync(int id, ItemGroupModel model)
-        {
-            return Task.FromResult(id == 1);
-        }
-
-        public Task<bool> DeleteAsync(int id)
-        {
-            return Task.FromResult(id == 1);
-        }
-
-        public Task<IEnumerable<ItemModel>> GetItemsAsync(int id) =>
-            Task.FromResult<IEnumerable<ItemModel>>(Array.Empty<ItemModel>());
-
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var items = await response.Content.ReadFromJsonAsync<List<ItemModel>>();
+        Assert.NotNull(items);
+        Assert.Contains(items, result => result.ID == item.ID);
     }
+
+    [Fact]
+    public async Task GetItems_UnknownGroup_Returns404()
+    {
+        var response = await _context.Client.GetAsync(
+            $"{Url}/999999/items");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    private static ItemGroupModel ValidItemGroup() =>
+        new()
+        {
+            Name = $"Test Group {Guid.NewGuid():N}",
+            Description = "Test item group"
+        };
+
+    public void Dispose() => _context.Dispose();
 }

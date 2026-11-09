@@ -1,22 +1,162 @@
+using System.Net;
+using System.Net.Http.Json;
 
-using Microsoft.AspNetCore.Mvc;
-using Xunit;
-
-public class WarehouseApiTests
+public class WarehouseApiTests : IDisposable
 {
-    private readonly WarehouseController _controller;
+    private const string Url = "/api/v1/warehouses";
+    private readonly ApiTestContext _context = new();
 
-    public WarehouseApiTests()
+    [Fact]
+    public async Task GetAll_Returns200()
     {
-        _controller = new WarehouseController(new FakeWarehouseService());
+        var warehouse = await _context.Database.CreateWarehouse();
+
+        var response = await _context.Client.GetAsync(Url);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var warehouses =
+            await response.Content.ReadFromJsonAsync<List<WarehouseModel>>();
+        Assert.NotNull(warehouses);
+        Assert.Contains(warehouses, result => result.ID == warehouse.ID);
     }
 
-    private static WarehouseModel ValidWarehouse()
+    [Fact]
+    public async Task GetById_Existing_Returns200()
     {
-        return new WarehouseModel
+        var warehouse = await _context.Database.CreateWarehouse();
+
+        var response = await _context.Client.GetAsync(
+            $"{Url}/{warehouse.ID}");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var result = await response.Content.ReadFromJsonAsync<WarehouseModel>();
+        Assert.NotNull(result);
+        Assert.Equal(warehouse.ID, result.ID);
+    }
+
+    [Fact]
+    public async Task GetById_Unknown_Returns404()
+    {
+        var response = await _context.Client.GetAsync($"{Url}/999999");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Create_Valid_Returns201()
+    {
+        var response = await _context.Client.PostAsJsonAsync(
+            Url, ValidWarehouse());
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        var created = await response.Content.ReadFromJsonAsync<WarehouseModel>();
+        Assert.NotNull(created);
+        Assert.True(created.ID > 0);
+        Assert.NotNull(response.Headers.Location);
+    }
+
+    [Fact]
+    public async Task Update_Existing_Returns204()
+    {
+        var warehouse = await _context.Database.CreateWarehouse();
+        warehouse.Name = "Updated warehouse";
+
+        var response = await _context.Client.PutAsJsonAsync(
+            $"{Url}/{warehouse.ID}", warehouse);
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        var getResponse = await _context.Client.GetAsync(
+            $"{Url}/{warehouse.ID}");
+        Assert.Equal(HttpStatusCode.OK, getResponse.StatusCode);
+        var updated =
+            await getResponse.Content.ReadFromJsonAsync<WarehouseModel>();
+        Assert.NotNull(updated);
+        Assert.Equal("Updated warehouse", updated.Name);
+    }
+
+    [Fact]
+    public async Task Update_Unknown_Returns404()
+    {
+        var warehouse = ValidWarehouse();
+        warehouse.ID = 999999;
+
+        var response = await _context.Client.PutAsJsonAsync(
+            $"{Url}/999999", warehouse);
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Delete_Existing_Returns204()
+    {
+        var warehouse = await _context.Database.CreateWarehouse();
+
+        var response = await _context.Client.DeleteAsync(
+            $"{Url}/{warehouse.ID}");
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Delete_Unknown_Returns404()
+    {
+        var response = await _context.Client.DeleteAsync($"{Url}/999999");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetLocations_Existing_Returns200()
+    {
+        var warehouse = await _context.Database.CreateWarehouse();
+        await _context.Database.CreateLocation(warehouse);
+
+        var response = await _context.Client.GetAsync(
+            $"{Url}/{warehouse.ID}/locations");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var locations =
+            await response.Content.ReadFromJsonAsync<List<LocationModel>>();
+        Assert.NotNull(locations);
+        Assert.Single(locations);
+    }
+
+    [Fact]
+    public async Task GetLocations_Unknown_Returns404()
+    {
+        var response = await _context.Client.GetAsync(
+            $"{Url}/999999/locations");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Create_InvalidEmail_Returns400()
+    {
+        var warehouse = ValidWarehouse();
+        warehouse.Contact_Email = "invalid-email";
+
+        var response = await _context.Client.PostAsJsonAsync(Url, warehouse);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Delete_WithLocations_Returns409()
+    {
+        var warehouse = await _context.Database.CreateWarehouse();
+        await _context.Database.CreateLocation(warehouse);
+
+        var response = await _context.Client.DeleteAsync(
+            $"{Url}/{warehouse.ID}");
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+    }
+
+    private static WarehouseModel ValidWarehouse() =>
+        new()
         {
-            ID = 1,
-            Code = "WH001",
+            Code = $"WH-{Guid.NewGuid():N}",
             Name = "Test Warehouse",
             Address = "Teststraat 10",
             City = "Rotterdam",
@@ -25,169 +165,8 @@ public class WarehouseApiTests
             Country = "Netherlands",
             Contact_Name = "Test Persoon",
             Contact_Phone = "0612345678",
-            Contact_Email = "test@example.com"
+            Contact_Email = $"warehouse-{Guid.NewGuid():N}@example.com"
         };
-    }
 
-    [Fact]
-    public async Task GetAll_Returns200()
-    {
-        var result = await _controller.GetAll();
-
-        var ok = Assert.IsType<OkObjectResult>(result);
-        Assert.Equal(200, ok.StatusCode);
-
-        var warehouses =
-            Assert.IsAssignableFrom<IEnumerable<WarehouseModel>>(ok.Value);
-
-        Assert.Single(warehouses);
-    }
-
-    [Fact]
-    public async Task GetById_Existing_Returns200()
-    {
-        var result = await _controller.GetById(1);
-
-        Assert.IsType<OkObjectResult>(result);
-    }
-
-    [Fact]
-    public async Task GetById_Unknown_Returns404()
-    {
-        var result = await _controller.GetById(999999);
-
-        Assert.IsType<NotFoundResult>(result);
-    }
-
-    [Fact]
-    public async Task Create_Valid_Returns201()
-    {
-        var result = await _controller.Create(ValidWarehouse());
-
-        var created = Assert.IsType<CreatedAtActionResult>(result);
-
-        Assert.Equal(201, created.StatusCode);
-        Assert.Equal(nameof(WarehouseController.GetById),
-            created.ActionName);
-    }
-
-    [Fact]
-    public async Task Update_Existing_Returns204()
-    {
-        var result = await _controller.Update(
-            1, ValidWarehouse());
-
-        Assert.IsType<NoContentResult>(result);
-    }
-
-    [Fact]
-    public async Task Update_Unknown_Returns404()
-    {
-        var result = await _controller.Update(
-            999999, ValidWarehouse());
-
-        Assert.IsType<NotFoundResult>(result);
-    }
-
-    [Fact]
-    public async Task Delete_Existing_Returns204()
-    {
-        var result = await _controller.Delete(1);
-
-        Assert.IsType<NoContentResult>(result);
-    }
-
-    [Fact]
-    public async Task Delete_Unknown_Returns404()
-    {
-        var result = await _controller.Delete(999999);
-
-        Assert.IsType<NotFoundResult>(result);
-    }
-
-    [Fact]
-    public async Task GetLocations_Existing_Returns200()
-    {
-        var result = await _controller.GetLocations(1);
-
-        var ok = Assert.IsType<OkObjectResult>(result);
-        Assert.Equal(200, ok.StatusCode);
-    }
-
-    [Fact]
-    public async Task GetLocations_Unknown_Returns404()
-    {
-        var result = await _controller.GetLocations(999999);
-
-        Assert.IsType<NotFoundResult>(result);
-    }
-
-    [Fact]
-    public async Task Create_ServiceValidationError_Returns400()
-    {
-        var model = ValidWarehouse();
-        model.Name = "INVALID";
-
-        var result = await _controller.Create(model);
-
-        Assert.IsType<BadRequestObjectResult>(result);
-    }
-
-    [Fact]
-    public async Task Delete_ForeignKeyConflict_Returns409()
-    {
-        var result = await _controller.Delete(99);
-
-        Assert.IsType<ConflictObjectResult>(result);
-    }
-
-    private class FakeWarehouseService : IWarehouseService
-    {
-        public Task<IEnumerable<WarehouseModel>> GetAllAsync()
-        {
-            IEnumerable<WarehouseModel> warehouses =
-                new[] { ValidWarehouse() };
-
-            return Task.FromResult(warehouses);
-        }
-
-        public Task<WarehouseModel?> GetByIdAsync(int id)
-        {
-            WarehouseModel? warehouse =
-                id == 1 ? ValidWarehouse() : null;
-
-            return Task.FromResult(warehouse);
-        }
-
-        public Task<WarehouseModel> CreateAsync(WarehouseModel model)
-        {
-            if (model.Name == "INVALID")
-                throw new ArgumentException("Invalid warehouse.");
-
-            model.ID = 2;
-            return Task.FromResult(model);
-        }
-
-        public Task<bool> UpdateAsync(int id, WarehouseModel model)
-        {
-            return Task.FromResult(id == 1);
-        }
-
-        public Task<bool> DeleteAsync(int id)
-        {
-            if (id == 99)
-                throw new Microsoft.Data.Sqlite.SqliteException(
-                    "FOREIGN KEY constraint failed", 19, 787);
-
-            return Task.FromResult(id == 1);
-        }
-
-        public Task<IEnumerable<LocationModel>> GetLocationsAsync(int id)
-        {
-            IEnumerable<LocationModel> locations =
-                Array.Empty<LocationModel>();
-
-            return Task.FromResult(locations);
-        }
-    }
+    public void Dispose() => _context.Dispose();
 }
