@@ -13,7 +13,6 @@ builder.Services.AddScoped<IShipmentService, ShipmentService>();
 builder.Services.AddScoped<ISupplierService, SupplierService>();
 builder.Services.AddScoped<ITransferService, TransferService>();
 builder.Services.AddScoped<IWarehouseService, WarehouseService>();
-
 var app = builder.Build();
 app.MapControllers();
 
