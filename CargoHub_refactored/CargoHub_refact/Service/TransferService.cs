@@ -3,21 +3,38 @@ using System.Data;
 
 public class TransferService : ITransferService
 {
+    
     private void ValidateTransfer(TransferModel model)
     {
         ArgumentNullException.ThrowIfNull(model);
+
         ArgumentException.ThrowIfNullOrWhiteSpace(model.Reference);
-        ArgumentOutOfRangeException.ThrowIfNegative(model.From_Location_ID);
-        ArgumentOutOfRangeException.ThrowIfNegative(model.To_Location_ID);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(model.From_Location_ID);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(model.To_Location_ID);
         ArgumentException.ThrowIfNullOrWhiteSpace(model.Transfer_Status);
 
-        if (LocationAcces.ValidatedById(model.From_Location_ID))
-            throw new ArgumentException("From location ID is not valid / existing.", nameof(model.From_Location_ID));
+        // Controleer of de locaties bestaan.
+        if (!LocationAcces.ValidatedById(model.From_Location_ID))
+        {
+            throw new ArgumentException(
+                "From location ID does not exist.",
+                nameof(model.From_Location_ID));
+        }
 
-        if (LocationAcces.ValidatedById(model.To_Location_ID))
-            throw new ArgumentException("To location ID is not valid / existing.", nameof(model.To_Location_ID));
+        if (!LocationAcces.ValidatedById(model.To_Location_ID))
+        {
+            throw new ArgumentException(
+                "To location ID does not exist.",
+                nameof(model.To_Location_ID));
+        }
+
+        // Controleer of de bron- en doellocatie verschillen.
+        if (model.From_Location_ID == model.To_Location_ID)
+        {
+            throw new ArgumentException(
+                "From and to location cannot be the same.");
+        }
     }
-
     public async Task<IEnumerable<TransferModel>> GetAllAsync()
     {
         return await TransferAcces.GetAll();
@@ -25,7 +42,7 @@ public class TransferService : ITransferService
 
     public async Task<TransferModel?> GetByIdAsync(int id)
     {
-        if (id < 0)
+        if (id <= 0)
         return null;
 
         return await TransferAcces.GetById(id);
@@ -40,7 +57,7 @@ public class TransferService : ITransferService
 
     public async Task<bool> UpdateAsync(int id, TransferModel model)
     {
-        if (id < 0)
+        if (id <= 0)
         return false;
 
         var updatetransfer = await TransferAcces.GetById(id);
@@ -67,7 +84,7 @@ public class TransferService : ITransferService
 
     public async Task<bool> DeleteAsync(int id)
     {
-        if (id < 0)
+        if (id <= 0)
         return false;
         
         return await TransferAcces.Delete(id);
@@ -75,7 +92,7 @@ public class TransferService : ITransferService
 
     public async Task<IEnumerable<TransferItemModel>> GetItemsAsync(int id)
     {
-        if (id < 0)
+        if (id <= 0)
         return Enumerable.Empty<TransferItemModel>(); //geeft een lege lijst
         
         return await TransferAcces.GetItems(id);
@@ -83,7 +100,7 @@ public class TransferService : ITransferService
 
     public async Task<bool> CommitAsync(int id)
     {
-        if (id < 0)
+        if (id <= 0)
             return false;
 
         using var connection = DatabaseConnection.CreateConnection();

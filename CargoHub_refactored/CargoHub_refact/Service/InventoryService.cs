@@ -23,7 +23,7 @@ public class InventoryService : IInventoryService
 
     public async Task<InventoryModel?> GetByIdAsync(int id)
     {
-        if (id < 0)
+        if (id <= 0)
         return null;
 
         return await InventoryAcces.GetById(id);
@@ -38,7 +38,7 @@ public class InventoryService : IInventoryService
 
     public async Task<bool> UpdateAsync(int id, InventoryModel model)
     {
-        if (id < 0)
+        if (id <= 0)
         return false;
 
         ValidateInventory(model);
@@ -51,7 +51,7 @@ public class InventoryService : IInventoryService
 
     public async Task<bool> DeleteAsync(int id)
     {
-        if (id < 0)
+        if (id <= 0)
         return false;
 
         return await InventoryAcces.Delete(id);

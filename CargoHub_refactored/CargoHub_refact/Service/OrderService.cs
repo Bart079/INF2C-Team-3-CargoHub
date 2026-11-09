@@ -5,14 +5,14 @@ public class OrderService : IOrderService
     private void ValidateOrder(OrderModel model)
 { 
     ArgumentNullException.ThrowIfNull(model);
-    ArgumentOutOfRangeException.ThrowIfNegative(model.Client_ID);
+    ArgumentOutOfRangeException.ThrowIfNegativeOrZero(model.Client_ID);
     ArgumentException.ThrowIfNullOrWhiteSpace(model.Reference);
     ArgumentException.ThrowIfNullOrWhiteSpace(model.Customer_PO_Number);
     ArgumentException.ThrowIfNullOrWhiteSpace(model.Order_Status);
     ArgumentException.ThrowIfNullOrWhiteSpace(model.Shipping_Notes);
-    ArgumentOutOfRangeException.ThrowIfNegative(model.Warehouse_ID);
-    ArgumentOutOfRangeException.ThrowIfNegative(model.Ship_To_Client_ID);
-    ArgumentOutOfRangeException.ThrowIfNegative(model.Bill_To_Client_ID);
+    ArgumentOutOfRangeException.ThrowIfNegativeOrZero(model.Warehouse_ID);
+    ArgumentOutOfRangeException.ThrowIfNegativeOrZero(model.Ship_To_Client_ID);
+    ArgumentOutOfRangeException.ThrowIfNegativeOrZero(model.Bill_To_Client_ID);
 
     if (model.Order_Status != "shipped" && model.Order_Status != "pending")
         {
@@ -26,7 +26,7 @@ public class OrderService : IOrderService
 
     public async Task<OrderModel?> GetByIdAsync(int id)
     {
-        if (id < 0)
+        if (id <= 0)
         return null;
 
         return await OrderAcces.GetById(id);
@@ -40,7 +40,7 @@ public class OrderService : IOrderService
 
     public async Task<bool> UpdateAsync(int id, OrderModel model)
     {
-        if (id < 0)
+        if (id <= 0)
         return false;
 
         ValidateOrder(model);
@@ -50,7 +50,7 @@ public class OrderService : IOrderService
 
     public async Task<bool> DeleteAsync(int id)
     {
-        if (id < 0)
+        if (id <= 0)
         return false;
 
         return await OrderAcces.Delete(id);
@@ -59,7 +59,7 @@ public class OrderService : IOrderService
     //checkt niet of ID ongeldig is of dat er geen orders zijn
     public async Task<IEnumerable<OrderItemModel>> GetItemsAsync(int id)
     {
-        if (id < 0)
+        if (id <= 0)
         return Enumerable.Empty<OrderItemModel>(); //geeft een lege lijst
         
         return await OrderAcces.GetItems(id);
@@ -67,7 +67,7 @@ public class OrderService : IOrderService
 
     public async Task<bool> UpdateItemsAsync(int id, IEnumerable<OrderItemModel> items)
     {
-        if (id < 0)
+        if (id <= 0)
             return false;
 
         if (items == null)

@@ -12,12 +12,12 @@ public class ItemService : IItemService
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(model.Commodity_Code);
         ArgumentException.ThrowIfNullOrWhiteSpace(model.Barcode);
         ArgumentOutOfRangeException.ThrowIfNegative(model.Unit_Weight);
-        ArgumentOutOfRangeException.ThrowIfNegative(model.Item_Type_ID);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(model.Item_Type_ID);
         ArgumentOutOfRangeException.ThrowIfNegative(model.Min_Purchase_Quantity);
         ArgumentOutOfRangeException.ThrowIfNegative(model.Case_Size);
         ArgumentException.ThrowIfNullOrWhiteSpace(model.Packaging_Type);
         ArgumentOutOfRangeException.ThrowIfNegative(model.Order_Multiple);
-        ArgumentOutOfRangeException.ThrowIfNegative(model.Supplier_ID);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(model.Supplier_ID);
 
         if (Item_lineAcces.ValidateById(model.Item_Line_ID))
             throw new ArgumentException("Item line ID is not valid / existing.", nameof(model.Item_Line_ID));
@@ -51,7 +51,7 @@ public class ItemService : IItemService
 
     public async Task<bool> UpdateAsync(long id, ItemModel model)
     {
-        if (id < 0)
+        if (id <= 0)
         return false;
 
         ValidateItem(model);
@@ -61,7 +61,7 @@ public class ItemService : IItemService
 
     public async Task<bool> DeleteAsync(long id)
     {
-        if (id < 0)
+        if (id <= 0)
         return false;
         
         return await ItemAcces.Delete(id);
@@ -69,14 +69,14 @@ public class ItemService : IItemService
 
     public async Task<IEnumerable<InventoryModel>?> GetInventoryAsync(long id)
     {
-        if (id < 0) //misschien bij ongeldige id null
+        if (id <= 0) //misschien bij ongeldige id null
         return Enumerable.Empty<InventoryModel>(); //geeft een lege lijst
         
         return await InventoryAcces.GetByItemId(id);
     }
     public async Task<InventoryTotalsModel?> GetInventoryTotalsAsync(long id)
     {
-        if (id < 0)
+        if (id <= 0)
         return null;
 
         return await InventoryAcces.GetInventoryTotals(id);

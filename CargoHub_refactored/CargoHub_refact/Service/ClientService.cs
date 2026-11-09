@@ -36,7 +36,7 @@ private void ValidateClient(ClientModel model)
 
     public async Task<ClientModel?> GetByIdAsync(int id)
     {
-        if (id < 0)
+        if (id <= 0)
         return null;
 
         return await ClientAcces.GetById(id);
@@ -51,7 +51,7 @@ private void ValidateClient(ClientModel model)
 
     public async Task<bool> UpdateAsync(int id, ClientModel model)
     {
-        if (id < 0)
+        if (id <= 0)
         return false;
 
         ValidateClient(model);
@@ -61,7 +61,7 @@ private void ValidateClient(ClientModel model)
 
     public async Task<bool> DeleteAsync(int id)
     {
-        if (id < 0)
+        if (id <= 0)
             return false;
 
         return await ClientAcces.Delete(id);
