@@ -88,23 +88,27 @@ public static class UserAcces
     }
 
     public static async Task<bool> IsValid(string apiKey, string? path = null)
-    {   //krijgt originele key binnen
+    {
+        return await GetUserId(apiKey, path) is not null;
+    }
+
+    public static async Task<int?> GetUserId(string apiKey, string? path = null)
+    {
         if (string.IsNullOrWhiteSpace(apiKey))
-            return false;
- // convert key naar hash
+            return null;
+
         var apiKeyHash = Convert.ToHexString(
             SHA256.HashData(Encoding.UTF8.GetBytes(apiKey)));
-//controleert of ze in user staan 
+
         const string sql = @"
-            SELECT EXISTS(
-                SELECT 1 FROM User
+            SELECT user_id
+            FROM User
                 WHERE api_key_hash = @ApiKeyHash
-            );";
+            LIMIT 1;";
 
         using var connection = DatabaseConnection.CreateConnection(path);
         await connection.OpenAsync();
-        //-> returned true or false
-        return await connection.QuerySingleAsync<bool>(
+        return await connection.QuerySingleOrDefaultAsync<int?>(
             sql, new { ApiKeyHash = apiKeyHash });
     }
 }

@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
+using Project.Middleware;
 
 [ApiController]
 [Route("api/v1/transfers")]
+[RequirePermission("transfers")]
 public class TransfersController : ControllerBase
 {
     private readonly ITransferService _transferService;

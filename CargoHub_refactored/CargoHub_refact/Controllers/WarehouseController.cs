@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
+using Project.Middleware;
 
 [ApiController]
 [Route("api/v1/warehouses")]
+[RequirePermission("warehouses")]
 public class WarehouseController : ControllerBase
 {
     private readonly IWarehouseService _warehouseService;
