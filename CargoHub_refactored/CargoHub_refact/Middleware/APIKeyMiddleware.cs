@@ -28,6 +28,7 @@ public class APIKeyMiddleware
         {
             context.Response.StatusCode = StatusCodes.Status401Unauthorized;
             await context.Response.WriteAsync("ongeldige apikey");
+            return;
         }
         //apikey is geldig
         await _next(context);
