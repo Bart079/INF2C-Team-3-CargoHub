@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
+using Project.Middleware;
 
 [ApiController]
 [Route("api/v1/item_lines")]
+[RequirePermission("item_lines")]
 public class ItemLinesController : ControllerBase
 {
     private readonly IItemLineService _itemLineService;

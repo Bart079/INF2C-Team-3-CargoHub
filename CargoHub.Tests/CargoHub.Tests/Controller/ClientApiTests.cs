@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using Dapper;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Data.Sqlite;
+using Project.DataAccess;
 
 public class ClientsApiTests : IDisposable
 {
@@ -29,8 +30,22 @@ public class ClientsApiTests : IDisposable
         Environment.SetEnvironmentVariable(
             "CARGOHUB_TEST_DB", _dbPath);
 
+        UserAcces.CreateTable(_dbPath);
+        UserEndpointPermissionAcces.CreateTable(_dbPath);
+        var apiKey = UserAcces.Create("CargoHub client API tests")
+            .GetAwaiter()
+            .GetResult();
+        var userId = UserAcces.GetUserId(apiKey)
+            .GetAwaiter()
+            .GetResult()!.Value;
+        foreach (var action in new[] { "get", "post", "put", "delete" })
+            UserEndpointPermissionAcces.Grant(userId, "clients", action)
+                .GetAwaiter()
+                .GetResult();
+
         _factory = new WebApplicationFactory<Program>();
         _client = _factory.CreateClient();
+        _client.DefaultRequestHeaders.Add("X-API-KEY", apiKey);
     }
 
     private void CreateTestDatabase()

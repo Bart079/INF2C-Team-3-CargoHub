@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
+using Project.Middleware;
 using Microsoft.Data.Sqlite;
 
 [ApiController]
 [Route("api/v1/shipments")]
+[RequirePermission("shipments")]
 public class ShipmentsController : ControllerBase
 {
     private readonly IShipmentService _shipmentService;

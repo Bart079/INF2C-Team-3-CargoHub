@@ -1,115 +1,165 @@
-using Microsoft.AspNetCore.Mvc;
+using System.Net;
+using System.Net.Http.Json;
 
-public class TransfersApiTests
+public class TransfersApiTests : IDisposable
 {
-    private readonly TransfersController _controller =
-        new(new FakeTransferService());
-
-    private static TransferModel ValidModel() =>
-        new()
-        {
-            ID = 1,
-            Reference = "TRANSFER-1",
-            From_Location_ID = 1,
-            To_Location_ID = 2,
-            Transfer_Status = "pending"
-        };
+    private const string Url = "/api/v1/transfers";
+    private readonly ApiTestContext _context = new();
 
     [Fact]
     public async Task GetAll_Returns200()
     {
-        var ok = Assert.IsType<OkObjectResult>(await _controller.GetAll());
-        Assert.Single(Assert.IsAssignableFrom<IEnumerable<TransferModel>>(ok.Value));
+        var transfer = await _context.Database.CreateTransfer();
+
+        var response = await _context.Client.GetAsync(Url);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var transfers =
+            await response.Content.ReadFromJsonAsync<List<TransferModel>>();
+        Assert.NotNull(transfers);
+        Assert.Contains(transfers, result => result.ID == transfer.ID);
     }
 
     [Fact]
     public async Task GetById_Existing_Returns200()
     {
-        Assert.IsType<OkObjectResult>(await _controller.GetById(1));
+        var transfer = await _context.Database.CreateTransfer();
+
+        var response = await _context.Client.GetAsync(
+            $"{Url}/{transfer.ID}");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var result = await response.Content.ReadFromJsonAsync<TransferModel>();
+        Assert.NotNull(result);
+        Assert.Equal(transfer.ID, result.ID);
     }
 
     [Fact]
     public async Task GetById_Unknown_Returns404()
     {
-        Assert.IsType<NotFoundResult>(await _controller.GetById(2));
+        var response = await _context.Client.GetAsync($"{Url}/999999");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
     [Fact]
     public async Task Create_Returns201WithRouteId()
     {
-        var created = Assert.IsType<CreatedAtActionResult>(
-            await _controller.Create(ValidModel()));
-        Assert.Equal(201, created.StatusCode);
-        Assert.Equal(nameof(TransfersController.GetById), created.ActionName);
-        Assert.Equal(2, created.RouteValues!["id"]);
+        var model = await CreateValidTransfer();
+
+        var response = await _context.Client.PostAsJsonAsync(Url, model);
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        var created = await response.Content.ReadFromJsonAsync<TransferModel>();
+        Assert.NotNull(created);
+        Assert.True(created.ID > 0);
+        Assert.NotNull(response.Headers.Location);
     }
 
     [Fact]
     public async Task Update_Existing_Returns204()
     {
-        Assert.IsType<NoContentResult>(await _controller.Update(1, ValidModel()));
+        var transfer = await _context.Database.CreateTransfer();
+        transfer.Reference = "TRANSFER-UPDATED";
+
+        var response = await _context.Client.PutAsJsonAsync(
+            $"{Url}/{transfer.ID}", transfer);
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        var getResponse = await _context.Client.GetAsync(
+            $"{Url}/{transfer.ID}");
+        Assert.Equal(HttpStatusCode.OK, getResponse.StatusCode);
+        var updated = await getResponse.Content.ReadFromJsonAsync<TransferModel>();
+        Assert.NotNull(updated);
+        Assert.Equal("TRANSFER-UPDATED", updated.Reference);
     }
 
     [Fact]
     public async Task Update_Unknown_Returns404()
     {
-        Assert.IsType<NotFoundResult>(await _controller.Update(2, ValidModel()));
+        var model = await CreateValidTransfer();
+
+        var response = await _context.Client.PutAsJsonAsync(
+            $"{Url}/999999", model);
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
     [Fact]
     public async Task Delete_Existing_Returns204()
     {
-        Assert.IsType<NoContentResult>(await _controller.Delete(1));
+        var transfer = await _context.Database.CreateTransfer();
+
+        var response = await _context.Client.DeleteAsync(
+            $"{Url}/{transfer.ID}");
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
     }
 
     [Fact]
     public async Task Delete_Unknown_Returns404()
     {
-        Assert.IsType<NotFoundResult>(await _controller.Delete(2));
+        var response = await _context.Client.DeleteAsync($"{Url}/999999");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
     [Fact]
     public async Task GetItems_Existing_Returns200()
     {
-        var ok = Assert.IsType<OkObjectResult>(await _controller.GetItems(1));
-        Assert.IsAssignableFrom<IEnumerable<TransferItemModel>>(ok.Value);
+        var transfer = await _context.Database.CreateTransfer();
+
+        var response = await _context.Client.GetAsync(
+            $"{Url}/{transfer.ID}/items");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.NotNull(
+            await response.Content.ReadFromJsonAsync<List<TransferItemModel>>());
     }
 
     [Fact]
     public async Task GetItems_Unknown_Returns404()
     {
-        Assert.IsType<NotFoundResult>(await _controller.GetItems(2));
+        var response = await _context.Client.GetAsync(
+            $"{Url}/999999/items");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
     [Fact]
     public async Task Commit_Successful_Returns204()
     {
-        Assert.IsType<NoContentResult>(await _controller.Commit(1));
+        var transfer = await _context.Database.CreateTransfer();
+        var item = await _context.Database.CreateItem();
+        var sourceLocation = await Project.DataAccess.LocationAcces.GetById(
+            transfer.From_Location_ID);
+        Assert.NotNull(sourceLocation);
+        await _context.Database.CreateInventory(item, sourceLocation);
+        await _context.Database.AddTransferItem(
+            transfer.ID, checked((int)item.ID), 4);
+
+        var response = await _context.Client.PostAsync(
+            $"{Url}/{transfer.ID}/commit", content: null);
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
     }
 
     [Fact]
     public async Task Commit_Unsuccessful_Returns404()
     {
-        Assert.IsType<NotFoundResult>(await _controller.Commit(2));
+        var response = await _context.Client.PostAsync(
+            $"{Url}/999999/commit", content: null);
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
-    private sealed class FakeTransferService : ITransferService
+    private async Task<TransferModel> CreateValidTransfer()
     {
-        public Task<IEnumerable<TransferModel>> GetAllAsync() =>
-            Task.FromResult<IEnumerable<TransferModel>>([ValidModel()]);
-        public Task<TransferModel?> GetByIdAsync(int id) =>
-            Task.FromResult(id == 1 ? ValidModel() : null);
-        public Task<TransferModel> CreateAsync(TransferModel model)
-        {
-            model.ID = 2;
-            return Task.FromResult(model);
-        }
-        public Task<bool> UpdateAsync(int id, TransferModel model) =>
-            Task.FromResult(id == 1);
-        public Task<bool> DeleteAsync(int id) => Task.FromResult(id == 1);
-        public Task<IEnumerable<TransferItemModel>> GetItemsAsync(int id) =>
-            Task.FromResult<IEnumerable<TransferItemModel>>(
-                [new TransferItemModel { ID = 1, Transfer_ID = id }]);
-        public Task<bool> CommitAsync(int id) => Task.FromResult(id == 1);
+        var transfer = await _context.Database.CreateTransfer();
+        transfer.ID = 0;
+        transfer.Reference = $"TRANSFER-{Guid.NewGuid():N}";
+        return transfer;
     }
+
+    public void Dispose() => _context.Dispose();
 }

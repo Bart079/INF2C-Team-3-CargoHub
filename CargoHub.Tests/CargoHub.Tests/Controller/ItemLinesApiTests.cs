@@ -1,150 +1,128 @@
-using Microsoft.AspNetCore.Mvc;
+using System.Net;
+using System.Net.Http.Json;
 
-public class ItemLineApiTests
+public class ItemLineApiTests : IDisposable
 {
-    private readonly ItemLinesController _controller;
-
-    public ItemLineApiTests()
-    {
-        _controller = new ItemLinesController(new FakeItemLineService());
-    }
-
-    private static ItemLineModel ValidItemLine()
-    {
-        return new ItemLineModel
-        {
-            ID = 1,
-            Name = "Test",
-            Description = "Test ItemType Description"
-        };
-    }
+    private const string Url = "/api/v1/item_lines";
+    private readonly ApiTestContext _context = new();
 
     [Fact]
     public async Task GetAll_Returns200()
     {
-        var result = await _controller.GetAll();
+        var response = await _context.Client.GetAsync(Url);
 
-        var ok = Assert.IsType<OkObjectResult>(result);
-        Assert.Equal(200, ok.StatusCode);
-        Assert.Single(
-            Assert.IsAssignableFrom<IEnumerable<ItemLineModel>>(ok.Value));
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.NotNull(
+            await response.Content.ReadFromJsonAsync<List<ItemLineModel>>());
     }
 
     [Fact]
     public async Task GetById_Existing_Returns200()
     {
-        var result = await _controller.GetById(1);
+        var line = await _context.Database.CreateItemLine();
 
-        var ok = Assert.IsType<OkObjectResult>(result);
-        Assert.Equal(200, ok.StatusCode);
+        var response = await _context.Client.GetAsync($"{Url}/{line.ID}");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var result = await response.Content.ReadFromJsonAsync<ItemLineModel>();
+        Assert.NotNull(result);
+        Assert.Equal(line.ID, result.ID);
     }
 
     [Fact]
     public async Task GetById_Unknown_Returns404()
     {
-        var result = await _controller.GetById(999999);
+        var response = await _context.Client.GetAsync($"{Url}/999999");
 
-        Assert.IsType<NotFoundResult>(result);
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
     [Fact]
-    public async Task Create_Returns201()
+    public async Task Create_Valid_Returns201()
     {
-        var result = await _controller.Create(ValidItemLine());
+        var response = await _context.Client.PostAsJsonAsync(Url, ValidItemLine());
 
-        var created = Assert.IsType<CreatedAtActionResult>(result);
-
-        Assert.Equal(201, created.StatusCode);
-        Assert.Equal(nameof(ItemLinesController.GetById),
-            created.ActionName);
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        var created = await response.Content.ReadFromJsonAsync<ItemLineModel>();
+        Assert.NotNull(created);
+        Assert.True(created.ID > 0);
     }
 
     [Fact]
     public async Task Update_Existing_Returns204()
     {
-        var result = await _controller.Update(1, ValidItemLine());
+        var line = await _context.Database.CreateItemLine();
+        line.Name = $"Updated Line {Guid.NewGuid():N}";
+        line.Description = "Updated description";
 
-        Assert.IsType<NoContentResult>(result);
+        var response = await _context.Client.PutAsJsonAsync(
+            $"{Url}/{line.ID}", line);
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        var getResponse = await _context.Client.GetAsync($"{Url}/{line.ID}");
+        Assert.Equal(HttpStatusCode.OK, getResponse.StatusCode);
+        var updated = await getResponse.Content.ReadFromJsonAsync<ItemLineModel>();
+        Assert.NotNull(updated);
+        Assert.Equal(line.Name, updated.Name);
+        Assert.Equal("Updated description", updated.Description);
     }
 
     [Fact]
     public async Task Update_Unknown_Returns404()
     {
-        var result = await _controller.Update(
-            999999, ValidItemLine());
+        var response = await _context.Client.PutAsJsonAsync(
+            $"{Url}/999999", ValidItemLine());
 
-        Assert.IsType<NotFoundResult>(result);
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
     [Fact]
     public async Task Delete_Existing_Returns204()
     {
-        var result = await _controller.Delete(1);
+        var line = await _context.Database.CreateItemLine();
 
-        Assert.IsType<NoContentResult>(result);
+        var response = await _context.Client.DeleteAsync($"{Url}/{line.ID}");
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
     }
 
     [Fact]
     public async Task Delete_Unknown_Returns404()
     {
-        var result = await _controller.Delete(999999);
+        var response = await _context.Client.DeleteAsync($"{Url}/999999");
 
-        Assert.IsType<NotFoundResult>(result);
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
     [Fact]
-    public async Task GetItems_ExistingItemLine_Returns200()
+    public async Task GetItems_ExistingLine_Returns200()
     {
-        var result = await _controller.GetItems(1);
+        var item = await _context.Database.CreateItem();
 
-        var ok = Assert.IsType<OkObjectResult>(result);
-        Assert.Equal(200, ok.StatusCode);
-        Assert.Empty(
-            Assert.IsAssignableFrom<IEnumerable<ItemModel>>(ok.Value));
+        var response = await _context.Client.GetAsync(
+            $"{Url}/{item.Item_Line_ID}/items");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var items = await response.Content.ReadFromJsonAsync<List<ItemModel>>();
+        Assert.NotNull(items);
+        Assert.Contains(items, result => result.ID == item.ID);
     }
 
     [Fact]
-    public async Task GetItems_UnknownItemLine_Returns404()
+    public async Task GetItems_UnknownLine_Returns404()
     {
-        var result = await _controller.GetItems(999999);
+        var response = await _context.Client.GetAsync(
+            $"{Url}/999999/items");
 
-        Assert.IsType<NotFoundResult>(result);
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
-    // Nepservice: geen database nodig
-    private class FakeItemLineService : IItemLineService
-    {
-        public Task<IEnumerable<ItemLineModel>> GetAllAsync()
+    private static ItemLineModel ValidItemLine() =>
+        new()
         {
-            IEnumerable<ItemLineModel> itemLines =
-                new[] { ValidItemLine() };
+            Name = $"Test Line {Guid.NewGuid():N}",
+            Description = "Test item line"
+        };
 
-            return Task.FromResult(itemLines);
-        }
-        public Task<ItemLineModel?> GetByIdAsync(int id)
-        {
-            ItemLineModel? itemLine =
-                id == 1 ? ValidItemLine() : null;
-
-            return Task.FromResult(itemLine);
-        }
-        public Task<ItemLineModel> CreateAsync(ItemLineModel model)
-        {
-            model.ID = 2;
-            return Task.FromResult(model);
-        }
-
-        public Task<bool> UpdateAsync(int id, ItemLineModel model)
-        {
-            return Task.FromResult(id == 1);
-        }
-
-        public Task<bool> DeleteAsync(int id)
-        {
-            return Task.FromResult(id == 1);
-        }
-
-        public Task<IEnumerable<ItemModel>> GetItemsAsync(int id) =>
-            Task.FromResult<IEnumerable<ItemModel>>(Array.Empty<ItemModel>());
-    }
+    public void Dispose() => _context.Dispose();
 }

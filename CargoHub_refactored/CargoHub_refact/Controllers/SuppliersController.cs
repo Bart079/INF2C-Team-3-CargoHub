@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
+using Project.Middleware;
 
 [ApiController]
 [Route("api/v1/suppliers")]
+[RequirePermission("suppliers")]
 public class SuppliersController : ControllerBase
 {
     private readonly ISupplierService _supplierService;

@@ -1,10 +1,12 @@
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.Sqlite;
+using Project.Middleware;
 
 
 [ApiController]
 [Route("api/v1/clients")]
+[RequirePermission("clients")]
 public class ClientsController : ControllerBase
 {
     // Service die de controller gebruikt
