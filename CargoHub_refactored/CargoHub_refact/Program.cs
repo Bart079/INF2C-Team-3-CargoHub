@@ -1,3 +1,4 @@
+using Project.Middleware;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
@@ -14,6 +15,7 @@ builder.Services.AddScoped<ISupplierService, SupplierService>();
 builder.Services.AddScoped<ITransferService, TransferService>();
 builder.Services.AddScoped<IWarehouseService, WarehouseService>();
 var app = builder.Build();
+app.UseMiddleware<APIKeyMiddleware>(); // moet voor mapcontrollers eerst checken dan api endpoints beschikbaarmaken
 app.MapControllers();
 
 app.Run();
