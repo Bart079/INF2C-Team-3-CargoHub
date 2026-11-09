@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
+using Project.Middleware;
 
 [ApiController]
 [Route("api/v1/locations")]
+[RequirePermission("locations")]
 public class LocationsController : ControllerBase
 {
     private readonly ILocationService _locationService;

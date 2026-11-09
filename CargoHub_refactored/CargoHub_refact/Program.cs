@@ -43,6 +43,7 @@ builder.Services.AddScoped<ITransferService, TransferService>();
 builder.Services.AddScoped<IWarehouseService, WarehouseService>();
 var app = builder.Build();
 
+app.UseRouting();
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();

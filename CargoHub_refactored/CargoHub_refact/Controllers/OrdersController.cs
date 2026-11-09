@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
+using Project.Middleware;
 
 [ApiController]
 [Route("api/v1/orders")]
+[RequirePermission("orders")]
 public class OrdersController : ControllerBase
 {
     private readonly IOrderService _orderService;

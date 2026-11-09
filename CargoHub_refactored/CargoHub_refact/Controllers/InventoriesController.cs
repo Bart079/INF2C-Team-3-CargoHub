@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
+using Project.Middleware;
 
 [ApiController]
 [Route("api/v1/inventories")]
+[RequirePermission("inventories")]
 public class InventoriesController : ControllerBase
 {
     private readonly IInventoryService _inventoryService;

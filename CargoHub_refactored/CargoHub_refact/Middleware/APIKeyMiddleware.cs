@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Mvc.ApiExplorer;
+using Microsoft.AspNetCore.Mvc.Controllers;
 using Project.DataAccess;
 
 namespace Project.Middleware;
@@ -13,24 +13,63 @@ public class APIKeyMiddleware
     }
     public async Task InvokeAsync(HttpContext context)// bevat info over volledige httpaanvraag
     {
-        //api key uit request halen (leest de headers uit) haalt key uit request
         var apikey = context.Request.Headers["X-API-KEY"].FirstOrDefault();
-        //controleert of er een apikey is in request
         if (string.IsNullOrWhiteSpace(apikey))
         {
             context.Response.StatusCode = StatusCodes.Status401Unauthorized;
             await context.Response.WriteAsync("API key mist");
-            return; // stopt uitvoering 
+            return;
         }
-        //controleer of apikey goed is met method hash in useracces
-        var isValid = await UserAcces.IsValid(apikey);
-        if (!isValid)
+
+        var userId = await UserAcces.GetUserId(apikey);
+        if (userId is null)
         {
             context.Response.StatusCode = StatusCodes.Status401Unauthorized;
             await context.Response.WriteAsync("ongeldige apikey");
             return;
         }
-        //apikey is geldig
+
+        var endpoint = context.GetEndpoint();
+        var requiredPermission =
+            endpoint?.Metadata.GetMetadata<RequirePermissionAttribute>();
+        var controllerAction = endpoint?.Metadata.GetMetadata<ControllerActionDescriptor>();
+        if (controllerAction is not null || requiredPermission is not null)
+        {
+            var action = GetAction(context.Request.Method);
+
+            if (requiredPermission is null || action is null)
+            {
+                context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                await context.Response.WriteAsync("Geen toestemming voor dit endpoint");
+                return;
+            }
+
+            var hasPermission = await UserEndpointPermissionAcces.HasPermission(
+                userId.Value, requiredPermission.Resource, action);
+            if (!hasPermission)
+            {
+                context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                await context.Response.WriteAsync("Geen toestemming voor dit endpoint");
+                return;
+            }
+        }
+
         await _next(context);
+    }
+
+    private static string? GetAction(string method)
+    {
+        if (HttpMethods.IsGet(method) || HttpMethods.IsHead(method))
+            return "get";
+        if (HttpMethods.IsPost(method))
+            return "post";
+        if (HttpMethods.IsPut(method))
+            return "put";
+        if (HttpMethods.IsDelete(method))
+            return "delete";
+        if (HttpMethods.IsPatch(method))
+            return "patch";
+
+        return null;
     }
 }
