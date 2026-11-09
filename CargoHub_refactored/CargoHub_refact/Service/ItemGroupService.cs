@@ -10,7 +10,7 @@ public class ItemGroupService : IItemGroupService
     }
     public async Task<IEnumerable<ItemGroupModel>> GetAllAsync()
     {
-        return await Item_groupAcces.GetAllAsync();
+        return await Item_groupAcces.GetAll();
     }
 
     public async Task<ItemGroupModel?> GetByIdAsync(int id)
@@ -18,13 +18,13 @@ public class ItemGroupService : IItemGroupService
         if (id < 0)
         return null;
 
-        return await Item_groupAcces.GetByIdAsync(id);
+        return await Item_groupAcces.GetById(id);
     }
 
     public async Task<ItemGroupModel> CreateAsync(ItemGroupModel model)
     {
         ValidateItemGroup(model);
-        return await Item_groupAcces.CreateAsync(model);
+        return await Item_groupAcces.Create(model);
     }
 
     public async Task<bool> UpdateAsync(int id, ItemGroupModel model)
@@ -33,7 +33,7 @@ public class ItemGroupService : IItemGroupService
         return false;
 
         ValidateItemGroup(model);
-        return await Item_groupAcces.UpdateAsync(id,model);
+        return await Item_groupAcces.Update(id,model);
     }
 
     public async Task<bool> DeleteAsync(int id)
@@ -41,7 +41,7 @@ public class ItemGroupService : IItemGroupService
         if (id < 0)
         return false;
 
-        return await Item_groupAcces.DeleteAsync(id);
+        return await Item_groupAcces.Delete(id);
     }
 
 //checkt niet of ID ongeldig is of dat er geen orders zijn
@@ -50,6 +50,6 @@ public class ItemGroupService : IItemGroupService
         if (id < 0)
         return Enumerable.Empty<ItemModel>(); //geeft een lege lijst
         
-        return await Item_groupAcces.GetItemsAsync(id);
+        return await Item_groupAcces.GetItems(id);
     }
 }

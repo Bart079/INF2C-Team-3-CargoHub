@@ -1,4 +1,3 @@
-using Project.Migration;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
@@ -16,7 +15,6 @@ builder.Services.AddScoped<ITransferService, TransferService>();
 builder.Services.AddScoped<IWarehouseService, WarehouseService>();
 
 var app = builder.Build();
-// MigrationService.Run(); run om migration te doen
 app.MapControllers();
 
 app.Run();

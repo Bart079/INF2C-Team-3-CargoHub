@@ -4,7 +4,18 @@ public static class SupplierAcces
 {
     private static string _Table = "Supplier";
 
-    public static bool ValidateById(long id) => false;
+    public static bool ValidateById(long id)
+    {
+        const string sql = """
+            SELECT NOT EXISTS(
+                SELECT 1 FROM Supplier WHERE supplier_id = @id
+            );
+            """;
+
+        using var connection = DatabaseConnection.CreateConnection();
+        connection.Open();
+        return connection.QuerySingle<bool>(sql, new { id });
+    }
 
     public static void CreateTable(string path)
     {

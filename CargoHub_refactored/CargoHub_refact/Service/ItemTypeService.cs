@@ -14,7 +14,7 @@ public class ItemTypeService : IItemTypeService
     }
     public async Task<IEnumerable<ItemTypeModel>> GetAllAsync()
     {
-        return await Item_typeAcces.GetAllAsync();
+        return await Item_typeAcces.GetAll();
     }
 
     public async Task<ItemTypeModel?> GetByIdAsync(int id)
@@ -22,14 +22,14 @@ public class ItemTypeService : IItemTypeService
         if (id < 0)
         return null;
 
-        return await Item_typeAcces.GetByIdAsync(id);
+        return await Item_typeAcces.GetById(id);
     }
 
     public async Task<ItemTypeModel> CreateAsync(ItemTypeModel model)
     {
         ValidateItemType(model);
 
-        return await Item_typeAcces.CreateAsync(model);
+        return await Item_typeAcces.Create(model);
     }
 
     public async Task<bool> UpdateAsync(int id, ItemTypeModel model)
@@ -39,7 +39,7 @@ public class ItemTypeService : IItemTypeService
 
         ValidateItemType(model);
 
-        return await Item_typeAcces.UpdateAsync(id,model);
+        return await Item_typeAcces.Update(id,model);
     }
 
     public async Task<bool> DeleteAsync(int id)
@@ -47,7 +47,7 @@ public class ItemTypeService : IItemTypeService
         if (id < 0)
         return false; 
 
-        return await Item_typeAcces.DeleteAsync(id);
+        return await Item_typeAcces.Delete(id);
     }
 
     public async Task<IEnumerable<ItemModel>> GetItemsAsync(int id)
@@ -55,6 +55,6 @@ public class ItemTypeService : IItemTypeService
         if (id < 0)
         return Enumerable.Empty<ItemModel>(); //geeft een lege lijst
 
-        return await Item_typeAcces.GetItemsAsync(id);
+        return await Item_typeAcces.GetItems(id);
     }
 }

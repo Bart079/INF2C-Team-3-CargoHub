@@ -29,24 +29,24 @@ public class ItemService : IItemService
             throw new ArgumentException("Item type ID is not valid / existing.", nameof(model.Item_Type_ID));
 
         if (SupplierAcces.ValidateById(model.Supplier_ID))
-            throw new ArgumentException("Item type ID is not valid / existing.", nameof(model.Item_Type_ID));
+            throw new ArgumentException("Supplier ID is not valid / existing.", nameof(model.Supplier_ID));
     }
 
     public async Task<IEnumerable<ItemModel>> GetAllAsync()
     {
-        return await ItemAcces.GetAllAsync();
+        return await ItemAcces.GetAll();
     }
 
     public async Task<ItemModel?> GetByIdAsync(long id)
     {
-        return await ItemAcces.GetByIdAsync(id);
+        return await ItemAcces.GetById(id);
     }
 
     public async Task<ItemModel> CreateAsync(ItemModel model)
     {
         ValidateItem(model);
 
-        return await ItemAcces.CreateAsync(model);
+        return await ItemAcces.Create(model);
     }
 
     public async Task<bool> UpdateAsync(long id, ItemModel model)
@@ -56,7 +56,7 @@ public class ItemService : IItemService
 
         ValidateItem(model);
 
-        return await ItemAcces.UpdateAsync(id,model);
+        return await ItemAcces.Update(id,model);
     }
 
     public async Task<bool> DeleteAsync(long id)
@@ -64,7 +64,7 @@ public class ItemService : IItemService
         if (id < 0)
         return false;
         
-        return await ItemAcces.DeleteAsync(id);
+        return await ItemAcces.Delete(id);
     }
 
     public async Task<IEnumerable<InventoryModel>?> GetInventoryAsync(long id)
@@ -72,7 +72,7 @@ public class ItemService : IItemService
         if (id < 0) //misschien bij ongeldige id null
         return Enumerable.Empty<InventoryModel>(); //geeft een lege lijst
         
-        return await InventoryAcces.GetInventoryAsync(id);
+        return await InventoryAcces.GetByItemId(id);
     }
     public async Task<InventoryTotalsModel?> GetInventoryTotalsAsync(long id)
     {

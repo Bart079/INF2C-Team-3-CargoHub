@@ -5,6 +5,7 @@ from providers import data_provider
 
 TRANSFERS = []
 
+
 class Transfers(Base):
     def __init__(self, root_path, is_debug=False):
         self.data_path = root_path + "transfer.json"

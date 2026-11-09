@@ -1,3 +1,5 @@
+using System.Data;
+
 namespace Project.DataAccess;
 
 public static class InventoryAcces
@@ -62,13 +64,9 @@ public static class InventoryAcces
         return await connection.QuerySingleAsync<InventoryTotalsModel>(sql, new { itemId });
     }
 
-    // Temporary stub for service testing; replace with database access later.
-    public static Task<IEnumerable<InventoryModel>> GetInventoryAsync(long itemId) =>
-        Task.FromResult<IEnumerable<InventoryModel>>(Array.Empty<InventoryModel>());
-
-    public static async Task<IEnumerable<InventoryModel>> GetByItemId(int itemId)
+    public static async Task<IEnumerable<InventoryModel>> GetByItemId(long itemId)
     {
-        const string sql = @"
+        const string sql = """
             SELECT
                 inventory_id AS ID,
                 item_id AS Item_ID,
@@ -80,7 +78,8 @@ public static class InventoryAcces
                 created_at AS Created_At,
                 updated_at AS Updated_At
             FROM Inventory
-            WHERE item_id = @itemId;";
+            WHERE item_id = @itemId;
+            """;
 
         using var connection = DatabaseConnection.CreateConnection();
         await connection.OpenAsync();
@@ -134,6 +133,67 @@ public static class InventoryAcces
         var rowsAffected = await connection.ExecuteAsync(sql, rows, transaction);
         await transaction.CommitAsync();
         return rowsAffected == rows.Length;
+    }
+
+    public static async Task<IEnumerable<InventoryModel>> GetByItemAndLocation(
+        int itemId,
+        int locationId,
+        IDbConnection connection,
+        IDbTransaction transaction)
+    {
+        const string sql = """
+            SELECT inventory_id AS ID,
+                   item_id AS Item_ID,
+                   location_id AS Location_ID,
+                   quantity_on_hand AS Quantity_On_Hand,
+                   quantity_expected AS Quantity_Expected,
+                   quantity_ordered AS Quantity_Ordered,
+                   quantity_allocated AS Quantity_Allocated,
+                   created_at AS Created_At,
+                   updated_at AS Updated_At
+            FROM Inventory
+            WHERE item_id = @itemId AND location_id = @locationId
+            ORDER BY inventory_id;
+            """;
+
+        return await connection.QueryAsync<InventoryModel>(
+            sql, new { itemId, locationId }, transaction);
+    }
+
+    public static async Task<bool> UpdateQuantityOnHand(
+        int inventoryId,
+        int quantity,
+        IDbConnection connection,
+        IDbTransaction transaction)
+    {
+        const string sql = """
+            UPDATE Inventory
+            SET quantity_on_hand = @quantity,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE inventory_id = @inventoryId;
+            """;
+
+        return await connection.ExecuteAsync(
+            sql, new { inventoryId, quantity }, transaction) == 1;
+    }
+
+    public static async Task CreateAtLocation(
+        int itemId,
+        int locationId,
+        int quantity,
+        IDbConnection connection,
+        IDbTransaction transaction)
+    {
+        const string sql = """
+            INSERT INTO Inventory (
+                item_id, location_id, quantity_on_hand,
+                quantity_expected, quantity_ordered, quantity_allocated
+            )
+            VALUES (@itemId, @locationId, @quantity, 0, 0, 0);
+            """;
+
+        await connection.ExecuteAsync(
+            sql, new { itemId, locationId, quantity }, transaction);
     }
 
     public static async Task<IEnumerable<InventoryModel>> GetAll()

@@ -5,7 +5,7 @@ namespace Project.DataAccess;
 public static class DatabaseConnection
 {
     private static readonly string _dbPath = Path.Combine(
-        AppContext.BaseDirectory,
+        Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..")),
         "DataSources",
         "cargohub.db"
     );

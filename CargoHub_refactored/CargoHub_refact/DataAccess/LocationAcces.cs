@@ -4,23 +4,105 @@ public static class LocationAcces
 {
     private static string _Table = "Location";
 
-    // Temporary stubs for service testing; replace with database access later.
-    public static Task<IEnumerable<LocationModel>> GetAllAsync() =>
-        Task.FromResult<IEnumerable<LocationModel>>(Array.Empty<LocationModel>());
+    public static async Task<IEnumerable<LocationModel>> GetAll()
+    {
+        const string sql = """
+            SELECT
+                location_id AS ID,
+                warehouse_id AS Warehouse_ID,
+                code AS Code,
+                name AS Name,
+                created_at AS Created_At,
+                updated_at AS Updated_At
+            FROM Location;
+            """;
 
-    public static Task<LocationModel?> GetByIdAsync(int id) =>
-        Task.FromResult<LocationModel?>(null);
+        using var connection = DatabaseConnection.CreateConnection();
+        await connection.OpenAsync();
+        return await connection.QueryAsync<LocationModel>(sql);
+    }
 
-    public static Task<LocationModel> CreateAsync(LocationModel model) =>
-        Task.FromResult(model);
+    public static async Task<LocationModel?> GetById(int id)
+    {
+        const string sql = """
+            SELECT
+                location_id AS ID,
+                warehouse_id AS Warehouse_ID,
+                code AS Code,
+                name AS Name,
+                created_at AS Created_At,
+                updated_at AS Updated_At
+            FROM Location
+            WHERE location_id = @id;
+            """;
 
-    public static Task<bool> UpdateAsync(int id, LocationModel model) =>
-        Task.FromResult(false);
+        using var connection = DatabaseConnection.CreateConnection();
+        await connection.OpenAsync();
+        return await connection.QueryFirstOrDefaultAsync<LocationModel>(sql, new { id });
+    }
 
-    public static Task<bool> DeleteAsync(int id) =>
-        Task.FromResult(false);
+    public static async Task<LocationModel> Create(LocationModel model)
+    {
+        ArgumentNullException.ThrowIfNull(model);
 
-    public static bool ValidatedById(int id) => false;
+        const string sql = """
+            INSERT INTO Location (
+                warehouse_id, code, name, created_at, updated_at
+            )
+            VALUES (
+                @Warehouse_ID, @Code, @Name, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+            );
+            SELECT last_insert_rowid();
+            """;
+
+        using var connection = DatabaseConnection.CreateConnection();
+        await connection.OpenAsync();
+        var id = await connection.QuerySingleAsync<int>(sql, model);
+        return await GetById(id)
+            ?? throw new InvalidOperationException("Created location could not be retrieved.");
+    }
+
+    public static async Task<bool> Update(int id, LocationModel model)
+    {
+        ArgumentNullException.ThrowIfNull(model);
+
+        const string sql = """
+            UPDATE Location
+            SET warehouse_id = @Warehouse_ID,
+                code = @Code,
+                name = @Name,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE location_id = @id;
+            """;
+
+        using var connection = DatabaseConnection.CreateConnection();
+        await connection.OpenAsync();
+        var parameters = new DynamicParameters(model);
+        parameters.Add("id", id);
+        return await connection.ExecuteAsync(sql, parameters) > 0;
+    }
+
+    public static async Task<bool> Delete(int id)
+    {
+        const string sql = "DELETE FROM Location WHERE location_id = @id;";
+
+        using var connection = DatabaseConnection.CreateConnection();
+        await connection.OpenAsync();
+        return await connection.ExecuteAsync(sql, new { id }) > 0;
+    }
+
+    public static bool ValidatedById(int id)
+    {
+        const string sql = """
+            SELECT NOT EXISTS(
+                SELECT 1 FROM Location WHERE location_id = @id
+            );
+            """;
+
+        using var connection = DatabaseConnection.CreateConnection();
+        connection.Open();
+        return connection.QuerySingle<bool>(sql, new { id });
+    }
 
     public static void CreateTable(string path)
     {

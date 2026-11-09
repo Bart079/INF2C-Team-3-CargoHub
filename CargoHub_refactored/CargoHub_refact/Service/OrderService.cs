@@ -21,7 +21,7 @@ public class OrderService : IOrderService
 }
     public async Task<IEnumerable<OrderModel>> GetAllAsync()
     {
-        return await OrderAcces.GetAllAsync();
+        return await OrderAcces.GetAll();
     }
 
     public async Task<OrderModel?> GetByIdAsync(int id)
@@ -29,13 +29,13 @@ public class OrderService : IOrderService
         if (id < 0)
         return null;
 
-        return await OrderAcces.GetByIdAsync(id);
+        return await OrderAcces.GetById(id);
     }
     public async Task<OrderModel> CreateAsync(OrderModel model)
     {
         ValidateOrder(model);
 
-        return await OrderAcces.CreateAsync(model);
+        return await OrderAcces.Create(model);
     }
 
     public async Task<bool> UpdateAsync(int id, OrderModel model)
@@ -45,7 +45,7 @@ public class OrderService : IOrderService
 
         ValidateOrder(model);
 
-        return await OrderAcces.UpdateAsync(id,model);
+        return await OrderAcces.Update(id,model);
     }
 
     public async Task<bool> DeleteAsync(int id)
@@ -53,7 +53,7 @@ public class OrderService : IOrderService
         if (id < 0)
         return false;
 
-        return await OrderAcces.DeleteAsync(id);
+        return await OrderAcces.Delete(id);
     }
 
     //checkt niet of ID ongeldig is of dat er geen orders zijn
@@ -62,7 +62,7 @@ public class OrderService : IOrderService
         if (id < 0)
         return Enumerable.Empty<OrderItemModel>(); //geeft een lege lijst
         
-        return await OrderAcces.GetItemsAsync(id);
+        return await OrderAcces.GetItems(id);
     }
 
     public async Task<bool> UpdateItemsAsync(int id, IEnumerable<OrderItemModel> items)
@@ -73,6 +73,6 @@ public class OrderService : IOrderService
         if (items == null)
             throw new ArgumentNullException(nameof(items));
 
-        return await OrderAcces.UpdateItemsAsync(id, items);
+        return await OrderAcces.UpdateItems(id, items);
     }
 }

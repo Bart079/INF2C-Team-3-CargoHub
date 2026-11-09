@@ -4,28 +4,142 @@ public static class Item_typeAcces
 {
     private static string _Table = "Item_type";
 
-    // Temporary stubs for service testing; replace with database access later.
-    public static Task<IEnumerable<ItemTypeModel>> GetAllAsync() =>
-        Task.FromResult<IEnumerable<ItemTypeModel>>(Array.Empty<ItemTypeModel>());
+    public static async Task<IEnumerable<ItemTypeModel>> GetAll()
+    {
+        const string sql = """
+            SELECT
+                item_type_id AS ID,
+                name AS Name,
+                description AS Description,
+                created_at AS Created_At,
+                updated_at AS Updated_At
+            FROM Item_type;
+            """;
 
-    public static Task<ItemTypeModel?> GetByIdAsync(int id) =>
-        Task.FromResult<ItemTypeModel?>(null);
+        using var connection = DatabaseConnection.CreateConnection();
+        await connection.OpenAsync();
+        return await connection.QueryAsync<ItemTypeModel>(sql);
+    }
 
-    public static Task<ItemTypeModel> CreateAsync(ItemTypeModel model) =>
-        Task.FromResult(model);
+    public static async Task<ItemTypeModel?> GetById(int id)
+    {
+        const string sql = """
+            SELECT
+                item_type_id AS ID,
+                name AS Name,
+                description AS Description,
+                created_at AS Created_At,
+                updated_at AS Updated_At
+            FROM Item_type
+            WHERE item_type_id = @id;
+            """;
 
-    public static Task<bool> UpdateAsync(int id, ItemTypeModel model) =>
-        Task.FromResult(false);
+        using var connection = DatabaseConnection.CreateConnection();
+        await connection.OpenAsync();
+        return await connection.QueryFirstOrDefaultAsync<ItemTypeModel>(sql, new { id });
+    }
 
-    public static Task<bool> DeleteAsync(int id) =>
-        Task.FromResult(false);
+    public static async Task<ItemTypeModel> Create(ItemTypeModel model)
+    {
+        ArgumentNullException.ThrowIfNull(model);
 
-    public static Task<IEnumerable<ItemModel>> GetItemsAsync(int id) =>
-        Task.FromResult<IEnumerable<ItemModel>>(Array.Empty<ItemModel>());
+        const string sql = """
+            INSERT INTO Item_type (name, description, created_at, updated_at)
+            VALUES (@Name, @Description, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+            SELECT last_insert_rowid();
+            """;
 
-    public static bool ValidateById(long id) => false;
+        using var connection = DatabaseConnection.CreateConnection();
+        await connection.OpenAsync();
+        var id = await connection.QuerySingleAsync<int>(sql, model);
+        return await GetById(id)
+            ?? throw new InvalidOperationException("Created item type could not be retrieved.");
+    }
 
-    public static bool ValidatedByName(string name) => false;
+    public static async Task<bool> Update(int id, ItemTypeModel model)
+    {
+        ArgumentNullException.ThrowIfNull(model);
+
+        const string sql = """
+            UPDATE Item_type
+            SET name = @Name,
+                description = @Description,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE item_type_id = @id;
+            """;
+
+        using var connection = DatabaseConnection.CreateConnection();
+        await connection.OpenAsync();
+        var parameters = new DynamicParameters(model);
+        parameters.Add("id", id);
+        return await connection.ExecuteAsync(sql, parameters) > 0;
+    }
+
+    public static async Task<bool> Delete(int id)
+    {
+        const string sql = "DELETE FROM Item_type WHERE item_type_id = @id;";
+
+        using var connection = DatabaseConnection.CreateConnection();
+        await connection.OpenAsync();
+        return await connection.ExecuteAsync(sql, new { id }) > 0;
+    }
+
+    public static async Task<IEnumerable<ItemModel>> GetItems(int id)
+    {
+        const string sql = """
+            SELECT
+                item_id AS ID,
+                code AS Code,
+                description AS Description,
+                barcode AS Barcode,
+                model_number AS Model_Number,
+                commodity_code AS Commodity_Code,
+                unit_weight AS Unit_Weight,
+                item_line_id AS Item_Line_ID,
+                item_group_id AS Item_Group_ID,
+                item_type_id AS Item_Type_ID,
+                min_purchase_quantity AS Min_Purchase_Quantity,
+                case_size AS Case_Size,
+                packaging_type AS Packaging_Type,
+                order_multiple AS Order_Multiple,
+                supplier_id AS Supplier_ID,
+                supplier_sku AS Supplier_SKU,
+                created_at AS Created_At,
+                updated_at AS Updated_At
+            FROM Item
+            WHERE item_type_id = @id;
+            """;
+
+        using var connection = DatabaseConnection.CreateConnection();
+        await connection.OpenAsync();
+        return await connection.QueryAsync<ItemModel>(sql, new { id });
+    }
+
+    public static bool ValidateById(long id)
+    {
+        const string sql = """
+            SELECT NOT EXISTS(
+                SELECT 1 FROM Item_type WHERE item_type_id = @id
+            );
+            """;
+
+        using var connection = DatabaseConnection.CreateConnection();
+        connection.Open();
+        return connection.QuerySingle<bool>(sql, new { id });
+    }
+
+    public static bool ValidatedByName(string name)
+    {
+        const string sql = """
+            SELECT EXISTS(
+                SELECT 1 FROM Item_type WHERE name = @name
+            );
+            """;
+
+        using var connection = DatabaseConnection.CreateConnection();
+        connection.Open();
+        return connection.QuerySingle<bool>(sql, new { name });
+    }
 
     public static void CreateTable(string path)
     {

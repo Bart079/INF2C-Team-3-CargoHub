@@ -7,6 +7,7 @@ from providers import data_provider
 
 from processors import notification_processor
 
+
 class ApiRequestHandler(http.server.BaseHTTPRequestHandler):
 
     def handle_get_version_1(self, paths, user):
