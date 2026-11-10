@@ -53,9 +53,6 @@ if (app.Environment.IsDevelopment())
 app.UseMiddleware<APIKeyMiddleware>(); // moet voor mapcontrollers eerst checken dan api endpoints beschikbaarmaken
 app.MapControllers();
 
-var apiKey = await UserAcces.Create("Swagger");
-Console.WriteLine($"Swagger API key: {apiKey}");
-
 app.Run();
 
 public partial class Program { }

@@ -73,6 +73,23 @@ public static class UserAcces
             throw new ArgumentException("An app name is required.", nameof(appName));
 
         var apiKey = Convert.ToHexString(RandomNumberGenerator.GetBytes(32));
+        await StoreApiKey(apiKey, appName, path);
+
+        return apiKey;
+    }
+
+    public static async Task Register(string apiKey, string appName, string? path = null)
+    {
+        if (string.IsNullOrWhiteSpace(apiKey))
+            throw new ArgumentException("An API key is required.", nameof(apiKey));
+        if (string.IsNullOrWhiteSpace(appName))
+            throw new ArgumentException("An app name is required.", nameof(appName));
+
+        await StoreApiKey(apiKey, appName, path);
+    }
+
+    private static async Task StoreApiKey(string apiKey, string appName, string? path)
+    {
         var apiKeyHash = Convert.ToHexString(
             SHA256.HashData(Encoding.UTF8.GetBytes(apiKey)));
 
@@ -83,8 +100,6 @@ public static class UserAcces
         using var connection = DatabaseConnection.CreateConnection(path);
         await connection.OpenAsync();
         await connection.ExecuteAsync(sql, new { ApiKeyHash = apiKeyHash, AppName = appName });
-
-        return apiKey;
     }
 
     public static async Task<bool> IsValid(string apiKey, string? path = null)

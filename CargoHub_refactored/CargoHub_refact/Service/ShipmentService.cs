@@ -5,9 +5,9 @@ public class ShipmentService : IShipmentService
     private void ValidateShipment(ShipmentModel model)
     {
         ArgumentNullException.ThrowIfNull(model);
-        ArgumentOutOfRangeException.ThrowIfNegative(model.ID);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(model.ID);
         ArgumentException.ThrowIfNullOrWhiteSpace(model.Reference);
-        ArgumentOutOfRangeException.ThrowIfNegative(model.Order_ID);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(model.Order_ID);
         ArgumentException.ThrowIfNullOrWhiteSpace(model.Shipment_Type);
         ArgumentException.ThrowIfNullOrWhiteSpace(model.Shipment_Status);
         ArgumentException.ThrowIfNullOrWhiteSpace(model.Carrier_Name);

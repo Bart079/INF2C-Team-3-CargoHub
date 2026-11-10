@@ -5,14 +5,14 @@ public class OrderService : IOrderService
     private void ValidateOrder(OrderModel model)
 { 
     ArgumentNullException.ThrowIfNull(model);
-    ArgumentOutOfRangeException.ThrowIfNegative(model.Client_ID);
+    ArgumentOutOfRangeException.ThrowIfNegativeOrZero(model.Client_ID);
     ArgumentException.ThrowIfNullOrWhiteSpace(model.Reference);
     ArgumentException.ThrowIfNullOrWhiteSpace(model.Customer_PO_Number);
     ArgumentException.ThrowIfNullOrWhiteSpace(model.Order_Status);
     ArgumentException.ThrowIfNullOrWhiteSpace(model.Shipping_Notes);
-    ArgumentOutOfRangeException.ThrowIfNegative(model.Warehouse_ID);
-    ArgumentOutOfRangeException.ThrowIfNegative(model.Ship_To_Client_ID);
-    ArgumentOutOfRangeException.ThrowIfNegative(model.Bill_To_Client_ID);
+    ArgumentOutOfRangeException.ThrowIfNegativeOrZero(model.Warehouse_ID);
+    ArgumentOutOfRangeException.ThrowIfNegativeOrZero(model.Ship_To_Client_ID);
+    ArgumentOutOfRangeException.ThrowIfNegativeOrZero(model.Bill_To_Client_ID);
 
     if (model.Order_Status != "shipped" && model.Order_Status != "pending")
         {

@@ -5,8 +5,8 @@ public class LocationService : ILocationService
     private void ValidateLocation(LocationModel model)
     {
             ArgumentNullException.ThrowIfNull(model);
-            ArgumentOutOfRangeException.ThrowIfNegative(model.ID);
-            ArgumentOutOfRangeException.ThrowIfNegative(model.Warehouse_ID);
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(model.ID);
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(model.Warehouse_ID);
             ArgumentException.ThrowIfNullOrWhiteSpace(model.Code);
             ArgumentException.ThrowIfNullOrWhiteSpace(model.Name);
     }
