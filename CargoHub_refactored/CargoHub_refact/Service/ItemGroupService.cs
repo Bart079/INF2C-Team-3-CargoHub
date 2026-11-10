@@ -44,12 +44,18 @@ public class ItemGroupService : IItemGroupService
         return await Item_groupAcces.Delete(id);
     }
 
-//checkt niet of ID ongeldig is of dat er geen orders zijn
+
     public async Task<IEnumerable<ItemModel>> GetItemsAsync(int id)
     {
         if (id <= 0)
-        return Enumerable.Empty<ItemModel>(); //geeft een lege lijst
-        
+            throw new ArgumentOutOfRangeException(nameof(id));
+
+        var itemGroup = await Item_groupAcces.GetById(id);
+
+        if (itemGroup == null)
+            throw new KeyNotFoundException("Item group not found.");
+
         return await Item_groupAcces.GetItems(id);
     }
+
 }

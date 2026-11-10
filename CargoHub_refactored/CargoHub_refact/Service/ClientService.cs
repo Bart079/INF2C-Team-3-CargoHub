@@ -67,14 +67,15 @@ private void ValidateClient(ClientModel model)
         return await ClientAcces.Delete(id);
     }
 
-
-
-//checkt niet of ID ongeldig is of dat er geen orders zijn
-// moet wegg naar order 
     public async Task<IEnumerable<OrderModel>> GetOrdersAsync(int id)
     {
         if (id <= 0)
-            return Enumerable.Empty<OrderModel>();
+            throw new ArgumentOutOfRangeException(nameof(id));
+
+        var client = await ClientAcces.GetById(id);
+
+        if (client == null)
+            throw new KeyNotFoundException("Client not found.");
 
         return await OrderAcces.GetByClientId(id);
     }
