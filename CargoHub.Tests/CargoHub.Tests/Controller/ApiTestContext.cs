@@ -11,10 +11,10 @@ public sealed class ApiTestContext : IDisposable
     public ApiTestContext(bool grantAllPermissions = true)
     {
         Database.CreateSchema();
-        var apiKey = UserAcces.Create("CargoHub API tests")
+        ApiTestKey.Register("CargoHub API tests")
             .GetAwaiter()
             .GetResult();
-        UserId = UserAcces.GetUserId(apiKey)
+        UserId = UserAcces.GetUserId(ApiTestKey.ApiKey)
             .GetAwaiter()
             .GetResult()!.Value;
 
@@ -36,7 +36,7 @@ public sealed class ApiTestContext : IDisposable
 
         Factory = new WebApplicationFactory<Program>();
         Client = Factory.CreateClient();
-        Client.DefaultRequestHeaders.Add("X-API-KEY", apiKey);
+        Client.DefaultRequestHeaders.Add("X-API-KEY", ApiTestKey.ApiKey);
     }
 
     public void Dispose()
