@@ -71,8 +71,11 @@ if (app.Environment.IsDevelopment())
 app.UseMiddleware<APIKeyMiddleware>();
 app.MapControllers();
 
-var apiKey = await UserAcces.Create("Swagger");
-Console.WriteLine($"Swagger API key: {apiKey}");
+if (!app.Environment.IsEnvironment("Testing"))
+{
+    var apiKey = await UserAcces.Create("Swagger");
+    Console.WriteLine($"Swagger API key: {apiKey}");
+}
 
 app.Run();
 

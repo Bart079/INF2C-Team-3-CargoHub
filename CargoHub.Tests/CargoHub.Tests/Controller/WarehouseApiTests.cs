@@ -87,6 +87,26 @@ public class WarehouseApiTests : IDisposable
     }
 
     [Fact]
+    public async Task Update_InvalidEmail_Returns400()
+    {
+        var warehouse = await _context.Database.CreateWarehouse();
+        var originalEmail = warehouse.Contact_Email;
+        warehouse.Contact_Email = "invalid-email";
+
+        var response = await _context.Client.PutAsJsonAsync(
+            $"{Url}/{warehouse.ID}", warehouse);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+
+        // Controleer dat de mislukte update geen gegevens heeft gewijzigd.
+        var getResponse = await _context.Client.GetAsync($"{Url}/{warehouse.ID}");
+        Assert.Equal(HttpStatusCode.OK, getResponse.StatusCode);
+        var persisted = await getResponse.Content.ReadFromJsonAsync<WarehouseModel>();
+        Assert.NotNull(persisted);
+        Assert.Equal(originalEmail, persisted.Contact_Email);
+    }
+
+    [Fact]
     public async Task Delete_Existing_Returns204()
     {
         var warehouse = await _context.Database.CreateWarehouse();
@@ -119,6 +139,20 @@ public class WarehouseApiTests : IDisposable
             await response.Content.ReadFromJsonAsync<List<LocationModel>>();
         Assert.NotNull(locations);
         Assert.Single(locations);
+    }
+
+    [Fact]
+    public async Task GetLocations_ExistingWithoutLocations_Returns200Empty()
+    {
+        var warehouse = await _context.Database.CreateWarehouse();
+
+        var response = await _context.Client.GetAsync(
+            $"{Url}/{warehouse.ID}/locations");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var locations = await response.Content.ReadFromJsonAsync<List<LocationModel>>();
+        Assert.NotNull(locations);
+        Assert.Empty(locations);
     }
 
     [Fact]

@@ -51,6 +51,19 @@ public class LocationServiceTests
     }
 
     [Fact]
+    public async Task Create_ZeroId_StillValidatesRequiredFields()
+    {
+        var model = ValidLocation();
+        model.ID = 0;
+        model.Name = "";
+
+        var exception = await Assert.ThrowsAsync<ArgumentException>(
+            () => _service.CreateAsync(model));
+
+        Assert.Equal(nameof(LocationModel.Name), exception.ParamName);
+    }
+
+    [Fact]
     public async Task GetById_InvalidId_ReturnsNull()
     {
         var result = await _service.GetByIdAsync(-1);

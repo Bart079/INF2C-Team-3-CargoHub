@@ -13,15 +13,15 @@ public class TransferService : ITransferService
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(model.To_Location_ID);
         ArgumentException.ThrowIfNullOrWhiteSpace(model.Transfer_Status);
 
-        // Controleer of de locaties bestaan.
-        if (!LocationAcces.ValidatedById(model.From_Location_ID))
+        // ValidatedById uses SELECT NOT EXISTS: true means the location is missing.
+        if (LocationAcces.ValidatedById(model.From_Location_ID))
         {
             throw new ArgumentException(
                 "From location ID does not exist.",
                 nameof(model.From_Location_ID));
         }
 
-        if (!LocationAcces.ValidatedById(model.To_Location_ID))
+        if (LocationAcces.ValidatedById(model.To_Location_ID))
         {
             throw new ArgumentException(
                 "To location ID does not exist.",

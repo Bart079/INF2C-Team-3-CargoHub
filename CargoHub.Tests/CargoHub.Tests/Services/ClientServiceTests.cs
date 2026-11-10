@@ -104,10 +104,9 @@ public class ClientServiceTests
     }
 
     [Fact]
-    public async Task GetOrders_InvalidId_ReturnsEmpty()
+    public async Task GetOrders_InvalidId_ThrowsArgumentOutOfRangeException()
     {
-        var result = await _service.GetOrdersAsync(-1);
-
-        Assert.Empty(result);
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(
+            () => _service.GetOrdersAsync(-1));
     }
 }

@@ -4,6 +4,7 @@ using Dapper;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Data.Sqlite;
 using Project.DataAccess;
+using Microsoft.AspNetCore.Hosting;
 
 public class ShipmentsApiTests : IDisposable
 {
@@ -43,7 +44,9 @@ public class ShipmentsApiTests : IDisposable
                 .GetAwaiter()
                 .GetResult();
 
-        _factory = new WebApplicationFactory<Program>();
+        _factory = new WebApplicationFactory<Program>()
+            .WithWebHostBuilder(builder =>
+                builder.UseEnvironment("Testing"));
         _client = _factory.CreateClient();
         _client.DefaultRequestHeaders.Add("X-API-KEY", apiKey);
     }

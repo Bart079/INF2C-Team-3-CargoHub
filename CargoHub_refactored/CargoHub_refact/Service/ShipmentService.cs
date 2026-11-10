@@ -5,7 +5,8 @@ public class ShipmentService : IShipmentService
     private void ValidateShipment(ShipmentModel model)
     {
         ArgumentNullException.ThrowIfNull(model);
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(model.ID);
+        // ID is database-generated on POST, so 0 is valid. Negative IDs are not.
+        ArgumentOutOfRangeException.ThrowIfNegative(model.ID);
         ArgumentException.ThrowIfNullOrWhiteSpace(model.Reference);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(model.Order_ID);
         ArgumentException.ThrowIfNullOrWhiteSpace(model.Shipment_Type);
