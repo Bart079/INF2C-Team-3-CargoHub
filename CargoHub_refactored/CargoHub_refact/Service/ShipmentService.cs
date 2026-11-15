@@ -6,7 +6,6 @@ public class ShipmentService : IShipmentService
     {
         ArgumentNullException.ThrowIfNull(model);
         ArgumentOutOfRangeException.ThrowIfNegative(model.ID);
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(model.ID);
         ArgumentException.ThrowIfNullOrWhiteSpace(model.Reference);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(model.Order_ID);
         ArgumentException.ThrowIfNullOrWhiteSpace(model.Shipment_Type);
@@ -57,6 +56,8 @@ public class ShipmentService : IShipmentService
             return false;
 
         ValidateShipment(model);
+
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(model.ID);
 
         if (id != model.ID)
             throw new ArgumentException("The ID must match the model ID.", nameof(id));

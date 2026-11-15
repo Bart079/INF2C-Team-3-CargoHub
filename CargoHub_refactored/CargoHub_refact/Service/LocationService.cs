@@ -6,7 +6,6 @@ public class LocationService : ILocationService
     {
             ArgumentNullException.ThrowIfNull(model);
             ArgumentOutOfRangeException.ThrowIfNegative(model.ID);
-            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(model.ID);
             ArgumentOutOfRangeException.ThrowIfNegativeOrZero(model.Warehouse_ID);
             ArgumentException.ThrowIfNullOrWhiteSpace(model.Code);
             ArgumentException.ThrowIfNullOrWhiteSpace(model.Name, nameof(model.Name));
@@ -37,6 +36,8 @@ public class LocationService : ILocationService
         return false;
 
         ValidateLocation(model);
+
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(model.ID);
 
         return await LocationAcces.Update(id,model);
     }
