@@ -1,6 +1,4 @@
-
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Data.Sqlite;
 using Project.Middleware;
 
 
@@ -66,20 +64,14 @@ public class ClientsController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] ClientModel client)
     {
-        try
-        {
-            var createdClient = await _clientService.CreateAsync(client);
+        var createdClient =
+            await _clientService.CreateAsync(client);
 
-            return CreatedAtAction(
-                nameof(GetById),
-                new { id = createdClient.ID },
-                createdClient
-            );
-        }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(new { error = ex.Message });
-        }
+        return CreatedAtAction(
+            nameof(GetById),
+            new { id = createdClient.ID },
+            createdClient
+        );
     }
 
     // PUT: api/v1/clients/1
@@ -102,23 +94,11 @@ public class ClientsController : ControllerBase
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id)
     {
-        try
-        {
-            var deleted = await _clientService.DeleteAsync(id);
+        var deleted = await _clientService.DeleteAsync(id);
 
-            if (!deleted)
-                return NotFound();
+        if (!deleted)
+            return NotFound();
 
-            return Ok();
-        }
-        catch (SqliteException ex)
-            when (ex.SqliteErrorCode == 19 &&
-                ex.SqliteExtendedErrorCode == 787)
-        {
-            return Conflict(new
-            {
-                error = "Client cannot be deleted because it is still in use."
-            });
-        }
+        return Ok();
     }
 }
