@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Data.Sqlite;
 using Project.DataAccess;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc;
 
 public class ClientsApiTests : IDisposable
 {
@@ -298,6 +299,16 @@ public class ClientsApiTests : IDisposable
             $"{Url}/{client.ID}");
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal(
+            "application/problem+json",
+            response.Content.Headers.ContentType?.MediaType);
+
+        var problem = await response.Content
+            .ReadFromJsonAsync<ProblemDetails>();
+
+        Assert.NotNull(problem);
+        Assert.Equal(404, problem.Status);
+        Assert.Equal("Not Found", problem.Title);
     }
 
     // TEST 10 - POST lege naam
@@ -348,6 +359,16 @@ public class ClientsApiTests : IDisposable
         var getResponse = await _client.GetAsync($"{Url}/1");
 
         Assert.Equal(HttpStatusCode.OK, getResponse.StatusCode);
+        Assert.Equal(
+            "application/problem+json",
+            response.Content.Headers.ContentType?.MediaType);
+
+        var problem = await response.Content
+            .ReadFromJsonAsync<ProblemDetails>();
+
+        Assert.NotNull(problem);
+        Assert.Equal(409, problem.Status);
+        Assert.Equal("Conflict", problem.Title);
     }
 
     // TEST 14 - GET orders onbekende client

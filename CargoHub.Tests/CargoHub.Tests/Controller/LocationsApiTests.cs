@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using Microsoft.AspNetCore.Mvc;
 
 public class LocationsApiTests : IDisposable
 {
@@ -87,6 +88,16 @@ public class LocationsApiTests : IDisposable
             $"{Url}/999999", model);
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal(
+            "application/problem+json",
+            response.Content.Headers.ContentType?.MediaType);
+
+        var problem = await response.Content
+            .ReadFromJsonAsync<ProblemDetails>();
+
+        Assert.NotNull(problem);
+        Assert.Equal(404, problem.Status);
+        Assert.Equal("Not Found", problem.Title);
     }
 
     [Fact]

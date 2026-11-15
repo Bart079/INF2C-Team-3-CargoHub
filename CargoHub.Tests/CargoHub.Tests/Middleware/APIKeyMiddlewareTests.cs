@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Http;
 using Project.DataAccess;
 using Project.Middleware;
+using System.Text.Json;
+using Microsoft.AspNetCore.Mvc;
 
 public class APIKeyMiddlewareTests : IDisposable
 {
@@ -67,10 +69,68 @@ public class APIKeyMiddlewareTests : IDisposable
         });
         var context = CreateRequest(apiKey, "items", "post");
 
+        context.Response.Body = new MemoryStream();
+
         await middleware.InvokeAsync(context);
 
         Assert.Equal(StatusCodes.Status403Forbidden, context.Response.StatusCode);
         Assert.False(nextCalled);
+        Assert.Equal(
+            "application/problem+json",
+            context.Response.ContentType);
+
+        context.Response.Body.Position = 0;
+
+        var problem = await JsonSerializer.DeserializeAsync<ProblemDetails>(
+            context.Response.Body,
+            new JsonSerializerOptions(JsonSerializerDefaults.Web));
+
+        Assert.NotNull(problem);
+        Assert.Equal(403, problem.Status);
+        Assert.Equal("Forbidden", problem.Title);
+        Assert.Equal("Geen toestemming voor dit endpoint", problem.Detail);
+    }
+    [Fact]
+    public async Task InvokeAsync_MissingApiKey_ReturnsUnauthorizedProblemDetails()
+    {
+        // Arrange
+        var nextCalled = false;
+        var middleware = new APIKeyMiddleware(_ =>
+        {
+            nextCalled = true;
+            return Task.CompletedTask;
+        });
+
+        var context = new DefaultHttpContext();
+        context.Request.Path = "/api/v1/clients";
+        context.Response.Body = new MemoryStream();
+
+        // Geen X-API-KEY header toevoegen
+
+        // Act
+        await middleware.InvokeAsync(context);
+
+        // Assert
+        Assert.Equal(
+            StatusCodes.Status401Unauthorized,
+            context.Response.StatusCode);
+
+        Assert.False(nextCalled);
+        Assert.Equal(
+            "application/problem+json",
+            context.Response.ContentType);
+
+        context.Response.Body.Position = 0;
+
+        var problem = await JsonSerializer.DeserializeAsync<ProblemDetails>(
+            context.Response.Body,
+            new JsonSerializerOptions(JsonSerializerDefaults.Web));
+
+        Assert.NotNull(problem);
+        Assert.Equal(401, problem.Status);
+        Assert.Equal("Unauthorized", problem.Title);
+        Assert.Equal("API key ontbreekt", problem.Detail);
+        Assert.Equal("/api/v1/clients", problem.Instance);
     }
 
     private static DefaultHttpContext CreateRequest(

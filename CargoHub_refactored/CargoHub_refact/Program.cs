@@ -59,7 +59,7 @@ var app = builder.Build();
 
 // Centrale exception handler
 app.UseExceptionHandler();
-
+app.UseStatusCodePages();
 app.UseRouting();
 
 if (app.Environment.IsDevelopment())
