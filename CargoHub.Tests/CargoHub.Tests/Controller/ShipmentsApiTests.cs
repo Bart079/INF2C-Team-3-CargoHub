@@ -33,10 +33,10 @@ public class ShipmentsApiTests : IDisposable
 
         UserAcces.CreateTable(_dbPath);
         UserEndpointPermissionAcces.CreateTable(_dbPath);
-        var apiKey = UserAcces.Create("CargoHub shipment API tests")
+        ApiTestKey.Register("CargoHub shipment API tests", _dbPath)
             .GetAwaiter()
             .GetResult();
-        var userId = UserAcces.GetUserId(apiKey)
+        var userId = UserAcces.GetUserId(ApiTestKey.ApiKey, _dbPath)
             .GetAwaiter()
             .GetResult()!.Value;
         foreach (var action in new[] { "get", "post", "put", "delete" })
@@ -48,7 +48,7 @@ public class ShipmentsApiTests : IDisposable
             .WithWebHostBuilder(builder =>
                 builder.UseEnvironment("Testing"));
         _client = _factory.CreateClient();
-        _client.DefaultRequestHeaders.Add("X-API-KEY", apiKey);
+        _client.DefaultRequestHeaders.Add("X-API-KEY", ApiTestKey.ApiKey);
     }
 
     private void CreateTestDatabase()

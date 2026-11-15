@@ -6,6 +6,7 @@ public class LocationService : ILocationService
     {
             ArgumentNullException.ThrowIfNull(model);
             ArgumentOutOfRangeException.ThrowIfNegative(model.ID);
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(model.ID);
             ArgumentOutOfRangeException.ThrowIfNegativeOrZero(model.Warehouse_ID);
             ArgumentException.ThrowIfNullOrWhiteSpace(model.Code);
             ArgumentException.ThrowIfNullOrWhiteSpace(model.Name, nameof(model.Name));
