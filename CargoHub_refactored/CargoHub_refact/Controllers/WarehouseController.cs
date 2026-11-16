@@ -33,60 +33,35 @@ public class WarehouseController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] WarehouseModel model)
     {
-        try
-        {
-            var created = await _warehouseService.CreateAsync(model);
+        var created = await _warehouseService.CreateAsync(model);
 
-            return CreatedAtAction(
-                nameof(GetById),
-                new { id = created.ID },
-                created);
-        }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(new { error = ex.Message });
-        }
+        return CreatedAtAction(
+            nameof(GetById),
+            new { id = created.ID },
+            created
+        );
     }
 
     [HttpPut("{id:int}")]
     public async Task<IActionResult> Update(int id, [FromBody] WarehouseModel model)
     {
-        try
-        {
-            var updated = await _warehouseService.UpdateAsync(id, model);
+        var updated = await _warehouseService.UpdateAsync(id, model);
 
-            if (!updated)
-                return NotFound();
+        if (!updated)
+            return NotFound();
 
-            return NoContent();
-        }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(new { error = ex.Message });
-        }
+        return NoContent();
     }
 
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id)
     {
-        try
-        {
-            var deleted = await _warehouseService.DeleteAsync(id);
+        var deleted = await _warehouseService.DeleteAsync(id);
 
-            if (!deleted)
-                return NotFound();
+        if (!deleted)
+            return NotFound();
 
-            return NoContent();
-        }
-        catch (SqliteException ex)
-            when (ex.SqliteErrorCode == 19 &&
-                ex.SqliteExtendedErrorCode == 787)
-        {
-            return Conflict(new
-            {
-                error = "Warehouse cannot be deleted because it is still in use."
-            });
-        }
+        return NoContent();
     }
 
     [HttpGet("{id:int}/locations")]

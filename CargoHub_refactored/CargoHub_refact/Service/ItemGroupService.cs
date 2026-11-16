@@ -15,7 +15,7 @@ public class ItemGroupService : IItemGroupService
 
     public async Task<ItemGroupModel?> GetByIdAsync(int id)
     {
-        if (id < 0)
+        if (id <= 0)
         return null;
 
         return await Item_groupAcces.GetById(id);
@@ -29,7 +29,7 @@ public class ItemGroupService : IItemGroupService
 
     public async Task<bool> UpdateAsync(int id, ItemGroupModel model)
     {
-        if (id < 0)
+        if (id <= 0)
         return false;
 
         ValidateItemGroup(model);
@@ -38,18 +38,24 @@ public class ItemGroupService : IItemGroupService
 
     public async Task<bool> DeleteAsync(int id)
     {
-        if (id < 0)
+        if (id <= 0)
         return false;
 
         return await Item_groupAcces.Delete(id);
     }
 
-//checkt niet of ID ongeldig is of dat er geen orders zijn
+
     public async Task<IEnumerable<ItemModel>> GetItemsAsync(int id)
     {
-        if (id < 0)
-        return Enumerable.Empty<ItemModel>(); //geeft een lege lijst
-        
+        if (id <= 0)
+            throw new ArgumentOutOfRangeException(nameof(id));
+
+        var itemGroup = await Item_groupAcces.GetById(id);
+
+        if (itemGroup == null)
+            throw new KeyNotFoundException("Item group not found.");
+
         return await Item_groupAcces.GetItems(id);
     }
+
 }

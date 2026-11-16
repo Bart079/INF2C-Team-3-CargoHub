@@ -4,6 +4,8 @@ using Dapper;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Data.Sqlite;
 using Project.DataAccess;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc;
 
 public class ShipmentsApiTests : IDisposable
 {
@@ -43,7 +45,9 @@ public class ShipmentsApiTests : IDisposable
                 .GetAwaiter()
                 .GetResult();
 
-        _factory = new WebApplicationFactory<Program>();
+        _factory = new WebApplicationFactory<Program>()
+            .WithWebHostBuilder(builder =>
+                builder.UseEnvironment("Testing"));
         _client = _factory.CreateClient();
         _client.DefaultRequestHeaders.Add("X-API-KEY", ApiTestKey.ApiKey);
     }
@@ -378,6 +382,32 @@ public class ShipmentsApiTests : IDisposable
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
+    // POST shipment met ongeldige status
+    [Fact]
+    public async Task Create_InvalidShipmentStatus_Returns400()
+    {
+        // Arrange
+        var shipment = ValidShipment();
+        shipment.Shipment_Status = "InvalidStatus";
+
+        // Act
+        var response = await _client.PostAsJsonAsync(Url, shipment);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+
+        Assert.Equal(
+            "application/problem+json",
+            response.Content.Headers.ContentType?.MediaType);
+
+        var problem = await response.Content
+            .ReadFromJsonAsync<ProblemDetails>();
+
+        Assert.NotNull(problem);
+        Assert.Equal(400, problem.Status);
+        Assert.Equal("Bad Request", problem.Title);
+        Assert.Contains("Invalid shipment status", problem.Detail);
+    }
 
     public void Dispose()
     {
@@ -392,4 +422,6 @@ public class ShipmentsApiTests : IDisposable
         if (File.Exists(_dbPath))
             File.Delete(_dbPath);
     }
+
+    
 }

@@ -1,10 +1,11 @@
 using Microsoft.AspNetCore.Mvc.Testing;
 using Project.DataAccess;
+using Microsoft.AspNetCore.Hosting;
 
 public sealed class ApiTestContext : IDisposable
 {
     public AccessTestDatabase Database { get; } = new();
-    public WebApplicationFactory<Program> Factory { get; }
+    public WebApplicationFactory<Program> _factory { get; }
     public HttpClient Client { get; }
     public int UserId { get; }
 
@@ -34,15 +35,18 @@ public sealed class ApiTestContext : IDisposable
                     .GetResult();
         }
 
-        Factory = new WebApplicationFactory<Program>();
-        Client = Factory.CreateClient();
-        Client.DefaultRequestHeaders.Add("X-API-KEY", ApiTestKey.ApiKey);
+        _factory = new WebApplicationFactory<Program>()
+        .WithWebHostBuilder(builder =>
+            builder.UseEnvironment("Testing"));
+
+    Client = _factory.CreateClient();
+    Client.DefaultRequestHeaders.Add("X-API-KEY", ApiTestKey.ApiKey);
     }
 
     public void Dispose()
     {
         Client.Dispose();
-        Factory.Dispose();
+        _factory.Dispose();
         Database.Dispose();
     }
 }
