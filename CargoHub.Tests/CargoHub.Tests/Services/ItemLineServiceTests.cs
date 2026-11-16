@@ -87,11 +87,10 @@ public class ItemLineServiceTests
     }
 
     [Fact]
-    public async Task GetItemsAsync_NegativeId_ReturnsEmptyCollection()
+    public async Task GetItemsAsync_NegativeId_ThrowsArgumentOutOfRangeException()
     {
-        var result = await _service.GetItemsAsync(-1);
-
-        Assert.Empty(result);
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(
+            () => _service.GetItemsAsync(-1));
     }
 
     private static ItemLineModel ValidItemLine()

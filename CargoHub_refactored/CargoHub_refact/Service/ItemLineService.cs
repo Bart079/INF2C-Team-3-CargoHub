@@ -2,22 +2,27 @@ using Project.DataAccess;
 
 public class ItemLineService : IItemLineService
 {
-    private void ValidateItemLine(ItemLineModel model)
+    private void ValidateItemLine(ItemLineModel model, int? excludeId = null)
     {
         ArgumentNullException.ThrowIfNull(model);
         ArgumentException.ThrowIfNullOrWhiteSpace(model.Name);
         ArgumentException.ThrowIfNullOrWhiteSpace(model.Description);
 
-        if (Item_lineAcces.ValidateByName(model.Name))
-        throw new ArgumentException("Invalid item line name.", nameof(model.Name));
+        if (Item_lineAcces.ValidateByName(model.Name, excludeId))
+        {
+            throw new ArgumentException(
+                "Item line name already exists.",
+                nameof(model.Name));
+        }
     }
+
     public async Task<IEnumerable<ItemLineModel>> GetAllAsync()
     {
         return await Item_lineAcces.GetAll();
     }
     public async Task<ItemLineModel?> GetByIdAsync(int id)
     {
-        if (id < 0)
+        if (id <= 0)
         return null;
 
         return await Item_lineAcces.GetById(id);
@@ -31,7 +36,7 @@ public class ItemLineService : IItemLineService
 
     public async Task<bool> UpdateAsync(int id, ItemLineModel model)
     {
-        if (id < 0)
+        if (id <= 0)
         return false;
 
         ValidateItemLine(model);
@@ -40,18 +45,24 @@ public class ItemLineService : IItemLineService
 
     public async Task<bool> DeleteAsync(int id)
     {
-        if (id < 0)
+        if (id <= 0)
         return false;
 
         return await Item_lineAcces.Delete(id);
     }
 
-//checkt niet of ID ongeldig is of dat er geen orders zijn
+
     public async Task<IEnumerable<ItemModel>> GetItemsAsync(int id)
     {
-        if (id < 0)
-        return Enumerable.Empty<ItemModel>(); //geeft een lege lijst
+        if (id <= 0)
+            throw new ArgumentOutOfRangeException(nameof(id));
+
+        var itemLine = await Item_lineAcces.GetById(id);
+
+        if (itemLine == null)
+            throw new KeyNotFoundException("Item line not found.");
 
         return await Item_lineAcces.GetItems(id);
     }
+
 }

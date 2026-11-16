@@ -19,7 +19,7 @@ public class ItemTypeService : IItemTypeService
 
     public async Task<ItemTypeModel?> GetByIdAsync(int id)
     {
-        if (id < 0)
+        if (id <= 0)
         return null;
 
         return await Item_typeAcces.GetById(id);
@@ -34,7 +34,7 @@ public class ItemTypeService : IItemTypeService
 
     public async Task<bool> UpdateAsync(int id, ItemTypeModel model)
     {
-        if (id < 0)
+        if (id <= 0)
         return false;
 
         ValidateItemType(model);
@@ -44,7 +44,7 @@ public class ItemTypeService : IItemTypeService
 
     public async Task<bool> DeleteAsync(int id)
     {
-        if (id < 0)
+        if (id <= 0)
         return false; 
 
         return await Item_typeAcces.Delete(id);
@@ -52,7 +52,7 @@ public class ItemTypeService : IItemTypeService
 
     public async Task<IEnumerable<ItemModel>> GetItemsAsync(int id)
     {
-        if (id < 0)
+        if (id <= 0)
         return Enumerable.Empty<ItemModel>(); //geeft een lege lijst
 
         return await Item_typeAcces.GetItems(id);

@@ -128,18 +128,28 @@ public static class Item_lineAcces
         return connection.QuerySingle<bool>(sql, new { id });
     }
 
-    public static bool ValidateByName(string name)
+    
+    public static bool ValidateByName(string name, int? excludeId = null)
     {
         const string sql = """
             SELECT EXISTS(
-                SELECT 1 FROM Item_line WHERE name = @name
+                SELECT 1
+                FROM Item_line
+                WHERE name = @name
+                AND (@excludeId IS NULL OR item_line_id != @excludeId)
             );
             """;
 
         using var connection = DatabaseConnection.CreateConnection();
         connection.Open();
-        return connection.QuerySingle<bool>(sql, new { name });
+
+        return connection.QuerySingle<bool>(sql, new
+        {
+            name,
+            excludeId
+        });
     }
+
 
     public static void CreateTable(string path)
     {
