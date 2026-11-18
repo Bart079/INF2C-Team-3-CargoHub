@@ -29,7 +29,7 @@ RUN dotnet publish "CargoHub_refact.csproj" \
 #------------------------------------------------------------------------------------
 #2: run
 #heeft de runtime van .net 
-FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS final
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 
 #------------------------------------------------------------------------------------
 
