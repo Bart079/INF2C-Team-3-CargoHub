@@ -75,7 +75,20 @@ app.MapControllers();
 
 if (!app.Environment.IsEnvironment("Testing"))
 {
-    var apiKey = await UserAcces.Create("Swagger");
+    var apiKey = app.Configuration["Swagger:ApiKey"];
+
+    if (string.IsNullOrWhiteSpace(apiKey))
+    {
+        throw new InvalidOperationException("Swagger API key is missing.");
+    }
+
+    var userId = await UserAcces.GetUserId(apiKey);
+
+    if (userId == null)
+    {
+        await UserAcces.Register(apiKey, "Swagger");
+    }
+
     Console.WriteLine($"Swagger API key: {apiKey}");
 }
 
