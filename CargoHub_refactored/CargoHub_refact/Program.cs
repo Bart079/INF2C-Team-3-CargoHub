@@ -61,14 +61,16 @@ var app = builder.Build();
 app.UseExceptionHandler();
 app.UseStatusCodePages();
 app.UseRouting();
-
-if (app.Environment.IsDevelopment())
+/*if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
-}
+} */
 
-app.UseMiddleware<APIKeyMiddleware>();
+app.UseSwagger();
+app.UseSwaggerUI();
+
+app.UseMiddleware<APIKeyMiddleware>(); // moet voor mapcontrollers eerst checken dan api endpoints beschikbaarmaken
 app.MapControllers();
 
 if (!app.Environment.IsEnvironment("Testing"))

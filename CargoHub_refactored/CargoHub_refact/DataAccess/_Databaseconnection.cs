@@ -14,10 +14,13 @@ public static class DatabaseConnection
     {
         var testPath = Environment.GetEnvironmentVariable(
             "CARGOHUB_TEST_DB");
+        
+        var configurePath = Environment.GetEnvironmentVariable(
+            "CARGOHUB_DB_PATH");
 
         var connectionString = new SqliteConnectionStringBuilder
         {
-            DataSource = path ?? testPath ?? _dbPath,
+            DataSource = path ?? testPath ?? configurePath ?? _dbPath,
             Mode = SqliteOpenMode.ReadWrite,
             ForeignKeys = true,
             Pooling = testPath == null
