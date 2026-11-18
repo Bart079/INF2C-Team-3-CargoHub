@@ -102,7 +102,7 @@ public class APIKeyMiddlewareTests : IDisposable
         });
 
         var context = new DefaultHttpContext();
-        context.Request.Path = "/api/v1/clients";
+        context.Request.Path = "/api/v2/clients";
         context.Response.Body = new MemoryStream();
 
         // Geen X-API-KEY header toevoegen
@@ -130,7 +130,7 @@ public class APIKeyMiddlewareTests : IDisposable
         Assert.Equal(401, problem.Status);
         Assert.Equal("Unauthorized", problem.Title);
         Assert.Equal("API key ontbreekt", problem.Detail);
-        Assert.Equal("/api/v1/clients", problem.Instance);
+        Assert.Equal("/api/v2/clients", problem.Instance);
     }
 
     private static DefaultHttpContext CreateRequest(

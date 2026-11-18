@@ -153,7 +153,7 @@ $lines.Add('De noemer is het aantal geplande scenario''s. De teller is het aanta
 $lines.Add('')
 $lines.Add('| Endpoint | Happy flow | Alternative flow | Totaal |')
 $lines.Add('| --- | ---: | ---: | ---: |')
-foreach ($group in @($cases | Group-Object Endpoint | Sort-Object { [array]::IndexOf(@('GET /api/v1/warehouses', 'GET /api/v1/warehouses/{id}', 'POST /api/v1/warehouses', 'PUT /api/v1/warehouses/{id}', 'DELETE /api/v1/warehouses/{id}', 'GET /api/v1/warehouses/{id}/locations'), $_.Name) })) {
+foreach ($group in @($cases | Group-Object Endpoint | Sort-Object { [array]::IndexOf(@('GET /api/v2/warehouses', 'GET /api/v2/warehouses/{id}', 'POST /api/v2/warehouses', 'PUT /api/v2/warehouses/{id}', 'DELETE /api/v2/warehouses/{id}', 'GET /api/v2/warehouses/{id}/locations'), $_.Name) })) {
     $hp = Count-Statuses $group.Group 'Happy' 'Geslaagd'
     $ap = Count-Statuses $group.Group 'Alternative' 'Geslaagd'
     $ht = @($group.Group | Where-Object Flow -eq 'Happy').Count

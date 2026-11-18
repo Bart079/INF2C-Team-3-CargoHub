@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Project.Middleware;
 
 [ApiController]
-[Route("api/v1/locations")]
+[Route("api/v2/locations")]
 [RequirePermission("locations")]
 public class LocationsController : ControllerBase
 {

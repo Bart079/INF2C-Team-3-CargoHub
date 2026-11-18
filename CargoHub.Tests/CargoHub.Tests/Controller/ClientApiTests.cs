@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 
 public class ClientsApiTests : IDisposable
 {
-    private const string Url = "/api/v1/clients";
+    private const string Url = "/api/v2/clients";
 
     private readonly string _dbPath;
     private readonly string? _previousDbPath;

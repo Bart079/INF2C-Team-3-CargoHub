@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 
 public class LocationsApiTests : IDisposable
 {
-    private const string Url = "/api/v1/locations";
+    private const string Url = "/api/v2/locations";
     private readonly ApiTestContext _context = new();
 
     [Fact]
