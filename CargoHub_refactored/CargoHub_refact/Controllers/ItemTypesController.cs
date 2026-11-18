@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Project.Middleware;
 
 [ApiController]
-[Route("api/v1/item_types")]
+[Route("api/v2/item_types")]
 [RequirePermission("item_types")]
 public class ItemTypesController : ControllerBase
 {

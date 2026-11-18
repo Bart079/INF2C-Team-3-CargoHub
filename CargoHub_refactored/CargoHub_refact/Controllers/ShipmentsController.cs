@@ -3,7 +3,7 @@ using Project.Middleware;
 
 
 [ApiController]
-[Route("api/v1/shipments")]
+[Route("api/v2/shipments")]
 [RequirePermission("shipments")]
 public class ShipmentsController : ControllerBase
 {
