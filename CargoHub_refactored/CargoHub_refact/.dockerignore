@@ -1,0 +1,13 @@
+
+**/bin/
+**/obj/
+**/TestResults/
+**/CoverageReport/
+.git/
+.gitignore
+.vs/
+.vscode/
+*.user
+*.suo
+*.trx
+*.log

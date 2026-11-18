@@ -1,0 +1,13 @@
+services:
+  # API service, built from the local Dockerfile
+  api:
+    build: .
+    ports:
+      - "80:5000"        # host:container port mapping (80 on host -> 5000 in container)
+    environment:
+      ASPNETCORE_URLS: http://+:5000
+      CARGOHUB_DB_PATH: /app/data/cargohub.db
+    volumes:
+      - cargohub-data:/app/data
+volumes:
+  cargohub-data:
