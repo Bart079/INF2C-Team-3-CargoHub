@@ -2,9 +2,19 @@ using Project.Middleware;
 using Microsoft.OpenApi.Models;
 using Project.DataAccess;
 
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
+
+// Centrale exception handling
+builder.Services.AddProblemDetails();
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+
+builder.Services.Configure<ExceptionHandlerOptions>(options =>
+    options.AllowStatusCode404Response = true);
+
+// Swagger
 builder.Services.AddSwaggerGen(options =>
 {
     options.AddSecurityDefinition("ApiKey", new OpenApiSecurityScheme
@@ -30,6 +40,8 @@ builder.Services.AddSwaggerGen(options =>
         }
     });
 });
+
+// Services
 builder.Services.AddScoped<IClientService, ClientService>();
 builder.Services.AddScoped<IInventoryService, InventoryService>();
 builder.Services.AddScoped<IItemGroupService, ItemGroupService>();
@@ -42,8 +54,12 @@ builder.Services.AddScoped<IShipmentService, ShipmentService>();
 builder.Services.AddScoped<ISupplierService, SupplierService>();
 builder.Services.AddScoped<ITransferService, TransferService>();
 builder.Services.AddScoped<IWarehouseService, WarehouseService>();
+
 var app = builder.Build();
 
+// Centrale exception handler
+app.UseExceptionHandler();
+app.UseStatusCodePages();
 app.UseRouting();
 /*if (app.Environment.IsDevelopment())
 {
@@ -56,6 +72,12 @@ app.UseSwaggerUI();
 
 app.UseMiddleware<APIKeyMiddleware>(); // moet voor mapcontrollers eerst checken dan api endpoints beschikbaarmaken
 app.MapControllers();
+
+if (!app.Environment.IsEnvironment("Testing"))
+{
+    var apiKey = await UserAcces.Create("Swagger");
+    Console.WriteLine($"Swagger API key: {apiKey}");
+}
 
 app.Run();
 

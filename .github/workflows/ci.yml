@@ -1,0 +1,38 @@
+name: CargoHub CI
+
+on:
+  pull_request:
+    branches:
+      - development
+      - main
+
+  push:
+    branches:
+      - development
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    name: Build and Test
+    runs-on: ubuntu-26.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore CargoHub.Tests/CargoHub.Tests/CargoHub.Tests.csproj
+
+      - name: Build solution
+        run: dotnet build CargoHub.Tests/CargoHub.Tests/CargoHub.Tests.csproj --configuration Release --no-restore
+
+      - name: Run all tests
+        run: dotnet test CargoHub.Tests/CargoHub.Tests/CargoHub.Tests.csproj --configuration Release --no-build

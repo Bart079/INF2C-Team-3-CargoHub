@@ -4,10 +4,12 @@ using Dapper;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Data.Sqlite;
 using Project.DataAccess;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc;
 
 public class ClientsApiTests : IDisposable
 {
-    private const string Url = "/api/v1/clients";
+    private const string Url = "/api/v2/clients";
 
     private readonly string _dbPath;
     private readonly string? _previousDbPath;
@@ -43,7 +45,9 @@ public class ClientsApiTests : IDisposable
                 .GetAwaiter()
                 .GetResult();
 
-        _factory = new WebApplicationFactory<Program>();
+        _factory = new WebApplicationFactory<Program>()
+            .WithWebHostBuilder(builder =>
+                builder.UseEnvironment("Testing"));
         _client = _factory.CreateClient();
         _client.DefaultRequestHeaders.Add("X-API-KEY", ApiTestKey.ApiKey);
     }
@@ -295,6 +299,16 @@ public class ClientsApiTests : IDisposable
             $"{Url}/{client.ID}");
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal(
+            "application/problem+json",
+            response.Content.Headers.ContentType?.MediaType);
+
+        var problem = await response.Content
+            .ReadFromJsonAsync<ProblemDetails>();
+
+        Assert.NotNull(problem);
+        Assert.Equal(404, problem.Status);
+        Assert.Equal("Not Found", problem.Title);
     }
 
     // TEST 10 - POST lege naam
@@ -345,6 +359,16 @@ public class ClientsApiTests : IDisposable
         var getResponse = await _client.GetAsync($"{Url}/1");
 
         Assert.Equal(HttpStatusCode.OK, getResponse.StatusCode);
+        Assert.Equal(
+            "application/problem+json",
+            response.Content.Headers.ContentType?.MediaType);
+
+        var problem = await response.Content
+            .ReadFromJsonAsync<ProblemDetails>();
+
+        Assert.NotNull(problem);
+        Assert.Equal(409, problem.Status);
+        Assert.Equal("Conflict", problem.Title);
     }
 
     // TEST 14 - GET orders onbekende client

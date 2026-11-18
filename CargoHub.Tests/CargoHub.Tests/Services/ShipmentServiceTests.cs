@@ -101,6 +101,19 @@ public class ShipmentServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task CreateAsync_ZeroId_StillValidatesShipmentStatus()
+    {
+        var shipment = CreateShipment();
+        shipment.ID = 0;
+        shipment.Shipment_Status = "not-a-valid-status";
+
+        var exception = await Assert.ThrowsAsync<ArgumentException>(
+            () => _service.CreateAsync(shipment));
+
+        Assert.Equal(nameof(ShipmentModel.Shipment_Status), exception.ParamName);
+    }
+
+    [Fact]
     public async Task UpdateAsync_ThrowsWhenIdsDoNotMatch()
     {
         var shipment = CreateShipment();

@@ -26,7 +26,7 @@ public class OrderService : IOrderService
 
     public async Task<OrderModel?> GetByIdAsync(int id)
     {
-        if (id < 0)
+        if (id <= 0)
         return null;
 
         return await OrderAcces.GetById(id);
@@ -40,7 +40,7 @@ public class OrderService : IOrderService
 
     public async Task<bool> UpdateAsync(int id, OrderModel model)
     {
-        if (id < 0)
+        if (id <= 0)
         return false;
 
         ValidateOrder(model);
@@ -50,7 +50,7 @@ public class OrderService : IOrderService
 
     public async Task<bool> DeleteAsync(int id)
     {
-        if (id < 0)
+        if (id <= 0)
         return false;
 
         return await OrderAcces.Delete(id);
@@ -59,7 +59,7 @@ public class OrderService : IOrderService
     //checkt niet of ID ongeldig is of dat er geen orders zijn
     public async Task<IEnumerable<OrderItemModel>> GetItemsAsync(int id)
     {
-        if (id < 0)
+        if (id <= 0)
         return Enumerable.Empty<OrderItemModel>(); //geeft een lege lijst
         
         return await OrderAcces.GetItems(id);
@@ -67,7 +67,7 @@ public class OrderService : IOrderService
 
     public async Task<bool> UpdateItemsAsync(int id, IEnumerable<OrderItemModel> items)
     {
-        if (id < 0)
+        if (id <= 0)
             return false;
 
         if (items == null)

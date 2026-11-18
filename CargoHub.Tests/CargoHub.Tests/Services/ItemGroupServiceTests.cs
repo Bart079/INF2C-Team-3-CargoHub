@@ -107,15 +107,9 @@ public class ItemGroupServiceTests
     }
 
     [Fact]
-    public async Task GetItemsAsync_NegativeId_ReturnsEmptyList()
+    public async Task GetItemsAsync_NegativeId_ThrowsArgumentOutOfRangeException()
     {
-        // arrange
-        int id = -1;
-
-        //act
-        var result = await _service.GetItemsAsync(id);
-
-        //assert
-        Assert.Empty(result);
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(
+            () => _service.GetItemsAsync(-1));
     }
 }

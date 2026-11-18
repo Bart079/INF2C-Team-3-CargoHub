@@ -3,7 +3,7 @@ using System.Net.Http.Json;
 
 public class OrdersApiTests : IDisposable
 {
-    private const string Url = "/api/v1/orders";
+    private const string Url = "/api/v2/orders";
     private readonly ApiTestContext _context = new();
 
     [Fact]

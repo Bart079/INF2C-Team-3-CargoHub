@@ -5,10 +5,10 @@ public class LocationService : ILocationService
     private void ValidateLocation(LocationModel model)
     {
             ArgumentNullException.ThrowIfNull(model);
-            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(model.ID);
+            ArgumentOutOfRangeException.ThrowIfNegative(model.ID);
             ArgumentOutOfRangeException.ThrowIfNegativeOrZero(model.Warehouse_ID);
             ArgumentException.ThrowIfNullOrWhiteSpace(model.Code);
-            ArgumentException.ThrowIfNullOrWhiteSpace(model.Name);
+            ArgumentException.ThrowIfNullOrWhiteSpace(model.Name, nameof(model.Name));
     }
     public async Task<IEnumerable<LocationModel>> GetAllAsync()
     {
@@ -17,7 +17,7 @@ public class LocationService : ILocationService
 
     public async Task<LocationModel?> GetByIdAsync(int id)
     {
-        if (id < 0)
+        if (id <= 0)
         return null;
 
         return await LocationAcces.GetById(id);
@@ -32,17 +32,19 @@ public class LocationService : ILocationService
 
     public async Task<bool> UpdateAsync(int id, LocationModel model)
     {
-        if (id < 0)
+        if (id <= 0)
         return false;
 
         ValidateLocation(model);
+
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(model.ID);
 
         return await LocationAcces.Update(id,model);
     }
 
     public async Task<bool> DeleteAsync(int id)
     {
-        if (id < 0)
+        if (id <= 0)
             return false;
 
         return await LocationAcces.Delete(id);
