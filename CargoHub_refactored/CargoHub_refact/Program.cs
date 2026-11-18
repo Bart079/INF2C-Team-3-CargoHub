@@ -45,11 +45,15 @@ builder.Services.AddScoped<IWarehouseService, WarehouseService>();
 var app = builder.Build();
 
 app.UseRouting();
-if (app.Environment.IsDevelopment())
+/*if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
-}
+} */
+
+app.UseSwagger();
+app.UseSwaggerUI();
+
 app.UseMiddleware<APIKeyMiddleware>(); // moet voor mapcontrollers eerst checken dan api endpoints beschikbaarmaken
 app.MapControllers();
 
