@@ -58,8 +58,6 @@ RUN sed -i 's/\r$//' /app/docker-entrypoint.sh \
 #configure ASP.NET Core
 ENV ASPNETCORE_URLS=http://+:5000
 
-ENV CARGOHUB_DB_PATH=/app/data/cargohub.db
-
 #------------------------------------------------------------------------------------
 
 #documenteert poort
