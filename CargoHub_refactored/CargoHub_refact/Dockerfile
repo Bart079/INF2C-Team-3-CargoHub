@@ -49,8 +49,9 @@ COPY --from=build /app/publish .
 COPY --from=build /app/publish/DataSources/cargohub.db /app/cargohub.db
 #dockerfile kopieert script van projectmap naar docker image
 COPY docker_entrypoint.sh /app/docker-entrypoint.sh
-#geeft het script uitvoerrechten
-RUN chmod +x /app/docker-entrypoint.sh
+#normaliseert Windows-regelindelingen en geeft het script uitvoerrechten
+RUN sed -i 's/\r$//' /app/docker-entrypoint.sh \
+    && chmod +x /app/docker-entrypoint.sh
 
 #------------------------------------------------------------------------------------
 
