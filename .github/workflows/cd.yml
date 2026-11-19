@@ -1,0 +1,21 @@
+name: CargoHub CD
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  prepare-deployment:
+    name: Prepare Deployment
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Verify deployment configuration
+        run: |
+          echo "CargoHub CD workflow configured"
+          echo "Deployment will be added after Docker and VPS setup"
