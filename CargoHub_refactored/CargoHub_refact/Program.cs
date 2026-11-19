@@ -1,6 +1,5 @@
 using Project.Middleware;
 using Microsoft.OpenApi.Models;
-using Project.DataAccess;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -72,25 +71,6 @@ app.UseSwaggerUI();
 
 app.UseMiddleware<APIKeyMiddleware>(); // moet voor mapcontrollers eerst checken dan api endpoints beschikbaarmaken
 app.MapControllers();
-
-if (!app.Environment.IsEnvironment("Testing"))
-{
-    var apiKey = app.Configuration["Swagger:ApiKey"];
-
-    if (string.IsNullOrWhiteSpace(apiKey))
-    {
-        throw new InvalidOperationException("Swagger API key is missing.");
-    }
-
-    var userId = await UserAcces.GetUserId(apiKey);
-
-    if (userId == null)
-    {
-        await UserAcces.Register(apiKey, "Swagger");
-    }
-
-    Console.WriteLine($"Swagger API key: {apiKey}");
-}
 
 app.Run();
 
