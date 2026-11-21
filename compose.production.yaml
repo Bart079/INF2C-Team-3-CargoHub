@@ -1,0 +1,18 @@
+services:
+  api:
+    image: ${CARGOHUB_IMAGE:?Image version is required}
+    restart: unless-stopped
+
+    ports:
+      - "80:5000"
+
+    environment:
+      ASPNETCORE_URLS: http://+:5000
+      CARGOHUB_DB_PATH: /app/data/cargohub.db
+
+    volumes:
+      - cargohub-data:/app/data
+
+volumes:
+  cargohub-data:
+    name: cargohub-production-data

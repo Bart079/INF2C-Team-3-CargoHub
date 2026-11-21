@@ -1,6 +1,8 @@
 name: CargoHub CI
 
 on:
+  workflow_call:
+
   pull_request:
     branches:
       - development
@@ -36,3 +38,24 @@ jobs:
 
       - name: Run all tests
         run: dotnet test CargoHub.Tests/CargoHub.Tests/CargoHub.Tests.csproj --configuration Release --no-build
+
+
+  docker-build:
+    name: Test Docker Build
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v7
+        with:
+          context: ./CargoHub_refactored/CargoHub_refact
+          file: ./CargoHub_refactored/CargoHub_refact/Dockerfile
+          push: false
+          tags: cargohub:cd-test
+
