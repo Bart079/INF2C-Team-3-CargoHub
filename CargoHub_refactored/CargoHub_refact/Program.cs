@@ -1,6 +1,5 @@
 using Project.Middleware;
 using Microsoft.OpenApi.Models;
-using Project.DataAccess;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -72,12 +71,6 @@ app.UseSwaggerUI();
 
 app.UseMiddleware<APIKeyMiddleware>(); // moet voor mapcontrollers eerst checken dan api endpoints beschikbaarmaken
 app.MapControllers();
-
-if (!app.Environment.IsEnvironment("Testing"))
-{
-    var apiKey = await UserAcces.Create("Swagger");
-    Console.WriteLine($"Swagger API key: {apiKey}");
-}
 
 app.Run();
 

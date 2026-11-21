@@ -21,7 +21,7 @@ private void ValidateClient(ClientModel model)
 
         ArgumentException.ThrowIfNullOrWhiteSpace(model.Contact_Phone);
 
-        if (!Regex.IsMatch(model.Contact_Phone, @"^\+?[0-9 ]+$"))
+        if (!Regex.IsMatch(model.Contact_Phone, @"^\+?[0-9 ()]+$"))
             throw new ArgumentException("Phone number is invalid.");
 
         var digits = Regex.Replace(model.Contact_Phone, @"\D", "");
