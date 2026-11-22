@@ -27,24 +27,35 @@ jobs:
           printf '%s\n' "$SSH_HOST_KEY" > ~/.ssh/known_hosts
           chmod 600 ~/.ssh/known_hosts
 
-      - name: Test SSH connection
+      - name: Diagnose VPS connection
         env:
           VPS_HOST: ${{ secrets.VPS_HOST }}
-          VPS_USER: ${{ secrets.VPS_USER }}
         run: |
           echo "GitHub runner public IP:"
           curl -fsS --max-time 10 https://api.ipify.org
           echo ""
 
-          echo "Checking TCP connection to port 22:"
-          if timeout 15 bash -c 'echo > /dev/tcp/"$1"/22' _ "$VPS_HOST"; then
-            echo "Port 22 is reachable"
+          echo "Checking VPS host configuration:"
+          if [ "$VPS_HOST" = "145.24.237.27" ]; then
+            echo "VPS_HOST is correct"
           else
-            echo "Port 22 is NOT reachable"
+            echo "::error::VPS_HOST does not match the expected VPS"
             exit 1
           fi
 
-          echo "Testing SSH connection:"
+          echo "Checking TCP port 22:"
+          if timeout 15 bash -c 'echo > /dev/tcp/"$1"/22' _ "$VPS_HOST"; then
+            echo "Port 22 is reachable"
+          else
+            echo "::error::Port 22 is NOT reachable"
+            exit 1
+          fi
+
+      - name: Test SSH authentication
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+        run: |
           ssh -o BatchMode=yes \
               -o StrictHostKeyChecking=yes \
               -o ConnectTimeout=15 \
