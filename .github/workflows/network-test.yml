@@ -1,0 +1,28 @@
+name: Test VPS Network
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  network-test:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Test outbound connectivity
+        run: |
+          echo "Public runner IP:"
+          curl -fsS --max-time 10 https://api.ipify.org
+          echo ""
+
+          echo "Test SSH port on VPS:"
+          nc -vz -w 10 145.24.237.27 22
+
+      - name: Test VPS HTTP
+        if: always()
+        run: |
+          echo "Test HTTP port on VPS:"
+          curl -I --connect-timeout 10 \
+            http://145.24.237.27 || true
