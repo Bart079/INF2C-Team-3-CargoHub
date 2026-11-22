@@ -18,7 +18,7 @@ jobs:
           echo ""
 
           echo "Test SSH port on VPS:"
-          nc -vz -w 10 145.24.237.27 22
+          nc -vz -w 10 145.24.237.27 80
 
       - name: Test VPS HTTP
         if: always()
@@ -26,3 +26,4 @@ jobs:
           echo "Test HTTP port on VPS:"
           curl -I --connect-timeout 10 \
             http://145.24.237.27 || true
+  
