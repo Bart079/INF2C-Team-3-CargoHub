@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Project.Middleware;
 
 [ApiController]
-[Route("api/v1/transfers")]
+[Route("api/v2/transfers")]
 [RequirePermission("transfers")]
 public class TransfersController : ControllerBase
 {

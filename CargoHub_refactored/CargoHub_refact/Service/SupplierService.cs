@@ -16,7 +16,7 @@ public class SupplierService : ISupplierService
         ArgumentException.ThrowIfNullOrWhiteSpace(model.Phone_Number);
         ArgumentException.ThrowIfNullOrWhiteSpace(model.Code);
 
-        if (!Regex.IsMatch(model.Phone_Number, @"^\+?[0-9 ]+$"))
+        if (!Regex.IsMatch(model.Phone_Number, @"^\+?[0-9 ()]+$"))
             throw new ArgumentException("Phone number is invalid.");
 
         var digits = Regex.Replace(model.Phone_Number, @"\D", "");

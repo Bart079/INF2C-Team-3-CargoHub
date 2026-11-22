@@ -21,7 +21,7 @@ private void ValidateClient(ClientModel model)
 
         ArgumentException.ThrowIfNullOrWhiteSpace(model.Contact_Phone);
 
-        if (!Regex.IsMatch(model.Contact_Phone, @"^\+?[0-9 ]+$"))
+        if (!Regex.IsMatch(model.Contact_Phone, @"^\+?[0-9 ()]+$"))
             throw new ArgumentException("Phone number is invalid.");
 
         var digits = Regex.Replace(model.Contact_Phone, @"\D", "");
@@ -36,7 +36,7 @@ private void ValidateClient(ClientModel model)
 
     public async Task<ClientModel?> GetByIdAsync(int id)
     {
-        if (id < 0)
+        if (id <= 0)
         return null;
 
         return await ClientAcces.GetById(id);
@@ -51,7 +51,7 @@ private void ValidateClient(ClientModel model)
 
     public async Task<bool> UpdateAsync(int id, ClientModel model)
     {
-        if (id < 0)
+        if (id <= 0)
         return false;
 
         ValidateClient(model);
@@ -61,20 +61,21 @@ private void ValidateClient(ClientModel model)
 
     public async Task<bool> DeleteAsync(int id)
     {
-        if (id < 0)
+        if (id <= 0)
             return false;
 
         return await ClientAcces.Delete(id);
     }
 
-
-
-//checkt niet of ID ongeldig is of dat er geen orders zijn
-// moet wegg naar order 
     public async Task<IEnumerable<OrderModel>> GetOrdersAsync(int id)
     {
         if (id <= 0)
-            return Enumerable.Empty<OrderModel>();
+            throw new ArgumentOutOfRangeException(nameof(id));
+
+        var client = await ClientAcces.GetById(id);
+
+        if (client == null)
+            throw new KeyNotFoundException("Client not found.");
 
         return await OrderAcces.GetByClientId(id);
     }

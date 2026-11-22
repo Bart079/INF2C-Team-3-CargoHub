@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Project.Middleware;
 
 [ApiController]
-[Route("api/v1/inventories")]
+[Route("api/v2/inventories")]
 [RequirePermission("inventories")]
 public class InventoriesController : ControllerBase
 {

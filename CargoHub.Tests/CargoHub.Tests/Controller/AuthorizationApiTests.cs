@@ -9,7 +9,7 @@ public class AuthorizationApiTests
     {
         using var context = new ApiTestContext(grantAllPermissions: false);
 
-        var response = await context.Client.GetAsync("/api/v1/items");
+        var response = await context.Client.GetAsync("/api/v2/items");
 
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
@@ -21,9 +21,9 @@ public class AuthorizationApiTests
         await UserEndpointPermissionAcces.Grant(
             context.UserId, "items", "get");
 
-        var getResponse = await context.Client.GetAsync("/api/v1/items");
+        var getResponse = await context.Client.GetAsync("/api/v2/items");
         var postResponse = await context.Client.PostAsJsonAsync(
-            "/api/v1/items", new { });
+            "/api/v2/items", new { });
 
         Assert.Equal(HttpStatusCode.OK, getResponse.StatusCode);
         Assert.Equal(HttpStatusCode.Forbidden, postResponse.StatusCode);

@@ -1,11 +1,9 @@
-
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Data.Sqlite;
 using Project.Middleware;
 
 
 [ApiController]
-[Route("api/v1/clients")]
+[Route("api/v2/clients")]
 [RequirePermission("clients")]
 public class ClientsController : ControllerBase
 {
@@ -24,7 +22,7 @@ public class ClientsController : ControllerBase
         return Ok("ClientsController work!!!");
     }
 
-    // GET: api/v1/clients
+    // GET: api/v2/clients
     // Alle clients ophalen
     [HttpGet]
     public async Task<IActionResult> GetAll()
@@ -33,7 +31,7 @@ public class ClientsController : ControllerBase
         return Ok(clients);
     }
 
-    // GET: api/v1/clients/1
+    // GET: api/v2/clients/1
     // Een client ophalen op basis van ID
     [HttpGet("{id:int}")]
     public async Task<IActionResult> GetById(int id)
@@ -46,7 +44,7 @@ public class ClientsController : ControllerBase
         return Ok(client);
     }
 
-    // GET: api/v1/clients/1/orders
+    // GET: api/v2/clients/1/orders
     // Alle orders van een client ophalen
     [HttpGet("{id:int}/orders")]
     public async Task<IActionResult> GetOrders(int id)
@@ -61,28 +59,22 @@ public class ClientsController : ControllerBase
         return Ok(orders);
     }
 
-    // POST: api/v1/clients
+    // POST: api/v2/clients
     // Nieuwe client toevoegen
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] ClientModel client)
     {
-        try
-        {
-            var createdClient = await _clientService.CreateAsync(client);
+        var createdClient =
+            await _clientService.CreateAsync(client);
 
-            return CreatedAtAction(
-                nameof(GetById),
-                new { id = createdClient.ID },
-                createdClient
-            );
-        }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(new { error = ex.Message });
-        }
+        return CreatedAtAction(
+            nameof(GetById),
+            new { id = createdClient.ID },
+            createdClient
+        );
     }
 
-    // PUT: api/v1/clients/1
+    // PUT: api/v2/clients/1
     // Bestaande client aanpassen
     [HttpPut("{id:int}")]
     public async Task<IActionResult> Update(
@@ -97,28 +89,16 @@ public class ClientsController : ControllerBase
         return Ok();
     }
 
-    // DELETE: api/v1/clients/1
+    // DELETE: api/v2/clients/1
     // Client verwijderen
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id)
     {
-        try
-        {
-            var deleted = await _clientService.DeleteAsync(id);
+        var deleted = await _clientService.DeleteAsync(id);
 
-            if (!deleted)
-                return NotFound();
+        if (!deleted)
+            return NotFound();
 
-            return Ok();
-        }
-        catch (SqliteException ex)
-            when (ex.SqliteErrorCode == 19 &&
-                ex.SqliteExtendedErrorCode == 787)
-        {
-            return Conflict(new
-            {
-                error = "Client cannot be deleted because it is still in use."
-            });
-        }
+        return Ok();
     }
 }

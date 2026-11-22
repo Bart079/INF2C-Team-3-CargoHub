@@ -1,9 +1,10 @@
 using System.Net;
 using System.Net.Http.Json;
+using Microsoft.AspNetCore.Mvc;
 
 public class LocationsApiTests : IDisposable
 {
-    private const string Url = "/api/v1/locations";
+    private const string Url = "/api/v2/locations";
     private readonly ApiTestContext _context = new();
 
     [Fact]
@@ -80,10 +81,23 @@ public class LocationsApiTests : IDisposable
     {
         var warehouse = await _context.Database.CreateWarehouse();
 
+        var model = ValidModel(warehouse.ID);
+        model.ID = 999999;
+
         var response = await _context.Client.PutAsJsonAsync(
-            $"{Url}/999999", ValidModel(warehouse.ID));
+            $"{Url}/999999", model);
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal(
+            "application/problem+json",
+            response.Content.Headers.ContentType?.MediaType);
+
+        var problem = await response.Content
+            .ReadFromJsonAsync<ProblemDetails>();
+
+        Assert.NotNull(problem);
+        Assert.Equal(404, problem.Status);
+        Assert.Equal("Not Found", problem.Title);
     }
 
     [Fact]

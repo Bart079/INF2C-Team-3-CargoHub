@@ -5,7 +5,7 @@ public class ShipmentService : IShipmentService
     private void ValidateShipment(ShipmentModel model)
     {
         ArgumentNullException.ThrowIfNull(model);
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(model.ID);
+        ArgumentOutOfRangeException.ThrowIfNegative(model.ID);
         ArgumentException.ThrowIfNullOrWhiteSpace(model.Reference);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(model.Order_ID);
         ArgumentException.ThrowIfNullOrWhiteSpace(model.Shipment_Type);
@@ -37,7 +37,7 @@ public class ShipmentService : IShipmentService
 
     public async Task<ShipmentModel?> GetByIdAsync(int id)
     {
-        if (id < 0)
+        if (id <= 0)
             return null;
 
         return await ShipmentAcces.GetById(id);
@@ -52,10 +52,12 @@ public class ShipmentService : IShipmentService
 
     public async Task<bool> UpdateAsync(int id, ShipmentModel model)
     {
-        if (id < 0)
+        if (id <= 0)
             return false;
 
         ValidateShipment(model);
+
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(model.ID);
 
         if (id != model.ID)
             throw new ArgumentException("The ID must match the model ID.", nameof(id));
@@ -65,7 +67,7 @@ public class ShipmentService : IShipmentService
 
     public async Task<bool> DeleteAsync(int id)
     {
-        if (id < 0)
+        if (id <= 0)
             return false;
 
         return await ShipmentAcces.Delete(id);
@@ -74,7 +76,7 @@ public class ShipmentService : IShipmentService
     // Haalt de order-ID's van een shipment op
     public async Task<IEnumerable<int>> GetOrdersAsync(int id)
     {
-        if (id < 0)
+        if (id <= 0)
             return Enumerable.Empty<int>();
 
         return await ShipmentAcces.GetOrders(id);
@@ -83,7 +85,7 @@ public class ShipmentService : IShipmentService
     // Haalt de items van een shipment op
     public async Task<IEnumerable<ShipmentItemModel>> GetItemsAsync(int id)
     {
-        if (id < 0)
+        if (id <= 0)
             return Enumerable.Empty<ShipmentItemModel>();
 
         return await Shipment_itemAcces.GetItemsByShipmentId(id);
@@ -91,7 +93,7 @@ public class ShipmentService : IShipmentService
 
     public async Task<bool> UpdateOrdersAsync(int id, IEnumerable<int> orderIds)
     {
-        if (id < 0)
+        if (id <= 0)
             return false;
 
         ArgumentNullException.ThrowIfNull(orderIds);
