@@ -27,6 +27,32 @@ jobs:
           printf '%s\n' "$SSH_HOST_KEY" > ~/.ssh/known_hosts
           chmod 600 ~/.ssh/known_hosts
 
+      
+      - name: Diagnose VPS connection
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+        run: |
+          echo "GitHub runner IP:"
+          curl -fsS https://api.ipify.org
+          echo ""
+
+          echo "Checking VPS host configuration:"
+          if [ "$VPS_HOST" = "145.24.237.27" ]; then
+            echo "VPS_HOST is correct"
+          else
+            echo "::error::VPS_HOST does not match the expected VPS"
+            exit 1
+          fi
+
+          echo "Checking TCP port 22:"
+          if timeout 15 bash -c 'echo > /dev/tcp/"$1"/22' _ "$VPS_HOST"; then
+            echo "TCP connection successful"
+          else
+            echo "::error::TCP connection failed"
+            exit 1
+          fi
+
+
       - name: Test SSH connection
         env:
           VPS_HOST: ${{ secrets.VPS_HOST }}
