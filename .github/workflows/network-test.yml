@@ -18,7 +18,7 @@ jobs:
           echo ""
 
           echo "Test SSH port on VPS:"
-          nc -vz -w 10 145.24.237.27 443
+          nc -vz -w 10 145.24.237.27 88
 
       - name: Test VPS HTTP
         if: always()
