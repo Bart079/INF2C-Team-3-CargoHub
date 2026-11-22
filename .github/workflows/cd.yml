@@ -44,3 +44,70 @@ jobs:
           file: ./CargoHub_refactored/CargoHub_refact/Dockerfile
           push: true
           tags: ghcr.io/bart079/inf2c-team-3-cargohub:${{ github.sha }}
+
+  
+  deploy:
+    name: Deploy to Linux VPS
+    needs: publish
+    if: vars.ENABLE_VPS_DEPLOYMENT == 'true'
+    runs-on: ubuntu-24.04
+    environment: production
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Configure SSH
+        env:
+          SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          SSH_HOST_KEY: ${{ secrets.VPS_SSH_HOST_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+
+          printf '%s\n' "$SSH_HOST_KEY" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+
+      
+      - name: Copy production Compose file
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+        run: |
+          scp -o BatchMode=yes \
+            -o StrictHostKeyChecking=yes \
+            compose.production.yaml \
+            "$VPS_USER@$VPS_HOST:CargoHub/compose.production.yaml"
+
+      
+      - name: Deploy Docker image
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          IMAGE: ghcr.io/bart079/inf2c-team-3-cargohub:${{ github.sha }}
+        run: |
+          ssh -o BatchMode=yes \
+            -o StrictHostKeyChecking=yes \
+            "$VPS_USER@$VPS_HOST" \
+            sh -s -- "$IMAGE" <<'EOF'
+          set -eu
+
+          IMAGE="$1"
+          cd "$HOME/CargoHub"
+
+          export CARGOHUB_IMAGE="$IMAGE"
+
+          docker compose -p cargohub \
+            -f compose.production.yaml pull api
+
+          docker compose -p cargohub \
+            -f compose.production.yaml up -d --no-deps api
+
+          docker compose -p cargohub \
+            -f compose.production.yaml ps
+          EOF
+
+

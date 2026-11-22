@@ -1,6 +1,6 @@
 services:
   api:
-    image: ${CARGOHUB_IMAGE:?Image version is required}
+    image: ${CARGOHUB_IMAGE:?CARGOHUB_IMAGE is required}
     restart: unless-stopped
 
     ports:
@@ -15,4 +15,5 @@ services:
 
 volumes:
   cargohub-data:
-    name: cargohub-production-data
+    external: true
+    name: cargohub_cargohub-data
