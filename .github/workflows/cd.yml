@@ -71,19 +71,18 @@ jobs:
           printf '%s\n' "$SSH_HOST_KEY" > ~/.ssh/known_hosts
           chmod 600 ~/.ssh/known_hosts
 
+      
       - name: Copy production Compose file
         env:
           VPS_HOST: ${{ secrets.VPS_HOST }}
           VPS_USER: ${{ secrets.VPS_USER }}
         run: |
-          ssh -o BatchMode=yes \
-            "$VPS_USER@$VPS_HOST" \
-            'mkdir -p ~/cargohub'
-
           scp -o BatchMode=yes \
+            -o StrictHostKeyChecking=yes \
             compose.production.yaml \
-            "$VPS_USER@$VPS_HOST:cargohub/compose.production.yaml"
+            "$VPS_USER@$VPS_HOST:CargoHub/compose.production.yaml"
 
+      
       - name: Deploy Docker image
         env:
           VPS_HOST: ${{ secrets.VPS_HOST }}
@@ -91,20 +90,24 @@ jobs:
           IMAGE: ghcr.io/bart079/inf2c-team-3-cargohub:${{ github.sha }}
         run: |
           ssh -o BatchMode=yes \
+            -o StrictHostKeyChecking=yes \
             "$VPS_USER@$VPS_HOST" \
             sh -s -- "$IMAGE" <<'EOF'
           set -eu
 
           IMAGE="$1"
-          cd "$HOME/cargohub"
+          cd "$HOME/CargoHub"
 
-          CARGOHUB_IMAGE="$IMAGE" \
-            docker compose -f compose.production.yaml pull api
+          export CARGOHUB_IMAGE="$IMAGE"
 
-          CARGOHUB_IMAGE="$IMAGE" \
-            docker compose -f compose.production.yaml up -d --no-deps api
+          docker compose -p cargohub \
+            -f compose.production.yaml pull api
 
-          CARGOHUB_IMAGE="$IMAGE" \
-            docker compose -f compose.production.yaml ps
+          docker compose -p cargohub \
+            -f compose.production.yaml up -d --no-deps api
+
+          docker compose -p cargohub \
+            -f compose.production.yaml ps
           EOF
+
 
